@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>MH Syndication Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<script>if(window.Chart){Chart.defaults.color="#d4d4d4";Chart.defaults.borderColor="#262626";Chart.defaults.font.family="Inter";}</script>
+<style>.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}.pill{border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:999px;padding:7px 16px;font:600 13px Inter,system-ui;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);transition:all .15s}.pill:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(30,58,138,.18)}.pill.on{background:var(--gold);color:#fff;border-color:var(--gold)}@media(max-width:600px){.pill{padding:6px 12px;font-size:12px}}.byw{display:flex;gap:16px;align-items:flex-start}.byw>.scroll{flex:1 1 auto;min-width:0}.byc{flex:0 0 460px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}@media(max-width:1000px){.byw{flex-direction:column}.byc{flex-basis:auto;width:100%}}
+:root{--bg:#f3f4f6;--line:#d1d5db;--gold:#1e3a8a;--txt:#111827;--muted:#a3a3a3;--red:#e11d2e;--green:#22c55e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px Inter,system-ui,sans-serif}
+h1,h2{font-family:Oswald,sans-serif;letter-spacing:.04em;margin:0;color:var(--gold)}h2{font-size:18px;margin:28px 0 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}.top{background:#fff;border-bottom:1px solid var(--line);padding:18px 0}
+.big{font:700 32px Oswald;color:var(--gold)}.muted{color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.card .l{font:700 11px Inter;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.card .v{font:700 24px Oswald;margin-top:4px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}th{background:var(--gold);color:#fff;font-weight:600}
+td:first-child,th:first-child{text-align:left}.neg{color:var(--red)}.pos{color:var(--green)}.scroll{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.chartbox{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+#gate{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:9}
+#gate form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
+#gate input{font:18px Inter;padding:8px 12px;border:1px solid var(--line);border-radius:8px;width:180px;text-align:center}
+#gate button{margin-left:6px;font:600 15px Inter;padding:9px 16px;border:0;border-radius:8px;background:var(--gold);color:#fff;cursor:pointer}
+</style><style>.sec{position:relative}.sec.drag{opacity:.55;outline:2px dashed var(--gold);border-radius:10px}.hdl{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;display:inline-block;padding:2px 10px;margin-right:6px;color:var(--gold);font-size:20px;vertical-align:middle}.swp{float:right;font-size:12px;border:1px solid #ccd;border-radius:12px;background:#fff;padding:2px 10px;cursor:pointer}#rstL{border:1px solid #ccd;border-radius:14px;background:#fff;padding:4px 12px;font-size:12px;cursor:pointer;margin:10px 0}</style><style id="socal">
+:root{--bg:#050505;--line:#262626;--gold:#e8b923;--txt:#f5f5f5;--muted:#a3a3a3;--red:#ff2d3a;--green:#22c55e;--surf:#141414;--surf2:#1c1c1c;--gb:#e8b92347}
+body{background:radial-gradient(1200px 500px at 50% -200px,#e8b9231a,transparent),var(--bg);color:var(--txt)}
+.top{background:linear-gradient(180deg,#0c0c0c,#050505);border-bottom:1px solid var(--gb);box-shadow:0 12px 40px #0000008c;position:relative}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,#e8b923,transparent)}
+h1{color:var(--gold);text-transform:uppercase;letter-spacing:.08em}h2{color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:600;border-left:3px solid var(--gold);padding-left:10px}
+.big{color:#f5c518;text-shadow:0 0 18px #e8b92340}
+.card,.chartbox,.byc,#gate form{background:linear-gradient(180deg,#1c1c1c,#141414);border:1px solid var(--gb);border-radius:1rem;box-shadow:0 1px 2px #0000001a;transition:transform .15s,box-shadow .15s}
+.card:hover,.chartbox:hover,.byc:hover{transform:translateY(-2px);box-shadow:0 14px 36px #00000073,0 0 0 1px #e8b923}
+.card .l{color:var(--muted)}.card .v{color:var(--txt)}
+table{background:var(--surf);border:1px solid var(--gb);border-radius:1rem;color:var(--txt)}
+th{background:#0c0c0c;color:var(--gold);text-transform:uppercase;font:600 11px Inter;letter-spacing:.12em;border-bottom:1px solid var(--gold)}
+td{border-bottom:1px solid #202020}tr:nth-child(even) td{background:#0c0c0c66}tr:hover td{background:#e8b92314}
+tr.ft td,tr:last-child td{font-weight:700}
+.pill{background:var(--surf2);color:var(--ink,#d4d4d4);border:1px solid var(--line);box-shadow:none}.pill:hover{border-color:var(--gold);box-shadow:0 0 18px #e8b92355}
+.pill.on{background:linear-gradient(180deg,#f5c518,#e8b923);color:#050505;border-color:#e8b923;box-shadow:0 0 18px #e8b923d9,0 4px 12px #00000080}
+.swp,#rstL{background:var(--surf2);color:var(--gold);border:1px solid var(--gb);border-radius:999px}.swp:hover,#rstL:hover{border-color:var(--gold)}
+#gate{background:var(--bg)}#gate input{background:#0c0c0c;color:var(--txt);border:1px solid var(--gb)}#gate button{background:var(--gold);color:#050505;border-radius:999px;font-weight:700}
+.hdl{color:var(--gold)}.muted{color:var(--muted)}
+#wl .card div[style*="border-bottom"]{border-bottom-color:#262626!important}
+</style><style id="signc">.card .v.pos,.big.pos,td.pos,.pos{color:var(--green)!important}.card .v.neg,.big.neg,td.neg,.neg{color:var(--red)!important}.big.pos{text-shadow:0 0 18px #22c55e40}.big.neg{text-shadow:0 0 18px #ff2d3a40}</style></head><body>
+<div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
+<div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
+<div class="wrap" id="app" style="display:none">
+<h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
+<h2>Elevate (AppFolio)</h2><div class="scroll" id="tE"></div>
+<h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div>
+<h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div>
+<h2>Distributions</h2><div class="scroll" id="tD"></div>
+<h2>Refinance Targets</h2><div class="scroll" id="tR"></div>
+<h2>Documents</h2><div class="scroll" id="tDoc"></div>
+<p class="muted">A blank cell means the figure isn't known yet. Positive gains are green and negatives are red.</p><br></div>
+<script>
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(pw){const e=await (await fetch('data.enc.json',{cache:'no-store'})).json();
+ const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+ const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+ return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct))));}
+const $=v=>v==null||v===''?'':(v<0?'-':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sg=v=>v==null?'':v>0?'pos':v<0?'neg':'';
+const pc=v=>v==null?'':(typeof v=='number'?v+'%':v);
+const dp=(d,c)=>d==null||!c?'':(d/c).toFixed(2)+'x';
+function tbl(id,h,rows,foot){document.getElementById(id).innerHTML='<table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>').join('')+(foot?'<tr class="ft">'+foot.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>':'')+'</table>';}
+const M=v=>({v:$(v),c:sg(v)});
+function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
+ let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
+ for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
+ document.getElementById('cards').innerHTML=h;
+ tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI','Note'],Object.entries(d.sponsors).map(([k,s])=>[k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x',s.note]),['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x','']);
+ tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status','Notes'],d.elevate.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],r[5]]),['Portal total (10 listed)','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','','']);
+ tbl('tB',['Position','Ownership','Contributed','Distributed','DPI','Notes'],d.bvg.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4]]));
+ tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
+ const D=[...d.elevate.filter(r=>r[3]!=null).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])]),['AMC Investments','3 investments (combined)',M(d.sponsors['AMC Investments'].dist)],['Elevate','Other 9 deals, not broken out',M(d.sponsors.Elevate.dist-56000)]];
+ tbl('tD',['Sponsor','Investment','Distributed to date'],D);
+ if(d.refi&&d.refi.length)tbl('tR',d.refi[0],d.refi.slice(1).map(r=>r.map(c=>typeof c=='number'?(Math.abs(c)>=1000?M(c):c):c)));else document.getElementById('tR').innerHTML='<div class="card"><div class="muted">Pending: refi targets will be added from the Elevate Mid-Year Update PDFs dated 10/16/26.</div></div>';
+ tbl('tDoc',['Date','Sponsor','Document'],d.docs);}
+async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';render(d);}catch(x){document.getElementById('err').textContent='Wrong password';}}
+if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;go(new Event('submit'));}
+</script></body></html>
