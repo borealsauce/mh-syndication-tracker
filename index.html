@@ -49,7 +49,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 .ring{width:54px;height:54px;float:right;margin-top:-4px}.ring circle{fill:none;stroke-width:6}.ring .bg{stroke:#262626}.ring .fg{stroke:#e8b923;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);transform:rotate(-90deg);transform-origin:50% 50%}.ring text{fill:#f5f5f5;font:700 12px Oswald;text-anchor:middle}
 .card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-4px) scale(1.01)}
 .spark{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:99}
-@media(prefers-reduced-motion:reduce){.fx-in{animation:none;opacity:1}.shim{animation:none}.bar i,.ring .fg{transition:none}.card:hover{transform:none}}</style></head><body>
+@media(prefers-reduced-motion:reduce){.fx-in{animation:none;opacity:1}.shim{animation:none}.bar i,.ring .fg{transition:none}.card:hover{transform:none}}</style><style>.lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}.stk{display:flex;height:8px;border-radius:9px;overflow:hidden;background:#1c1c1c;min-width:140px;margin-top:3px}.stk i{display:block;height:100%;width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}@media(prefers-reduced-motion:reduce){.stk i{transition:none}}</style></head><body>
 <div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none">
@@ -58,6 +58,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 <h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div>
 <h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div>
 <h2>Distributions</h2><div class="scroll" id="tD"></div>
+<h2>Pref vs Principal</h2><div class="muted" style="margin-bottom:8px"><span class="lg" style="background:#e8b923"></span>Pref <span class="lg" style="background:#22c55e"></span>Principal returned <span class="lg" style="background:#38bdf8"></span>Profit (B-share) <span class="lg" style="background:#525252"></span>Unallocated, pending data. Rules: BVG pref is 5%/yr and Elevate pref is 8%/yr on outstanding principal, paid quarterly; anything above the pref is principal.</div><div class="cards" id="splCards"></div><div class="scroll" style="margin-top:12px" id="tSpl"></div>
 <h2>Refinance Targets</h2><div class="scroll" id="tR"></div>
 <h2>Documents</h2><div class="scroll" id="tDoc"></div>
 <p class="muted">A blank cell means the figure isn't known yet. Positive gains are green and negatives are red.</p><br></div>
@@ -84,6 +85,10 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  const D=[...d.elevate.filter(r=>r[3]!=null).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])]),['Elevate','Other deals: portal distributions not broken out by deal',M(d.sponsors.Elevate.portal_dist-56000)],['Elevate','Subtotal: portal distributions',M(d.sponsors.Elevate.portal_dist)],['Elevate','Subtotal: return of capital (Sun Valley + Madison)',M(d.sponsors.Elevate.roc)]];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
  if(d.refi&&d.refi.length)tbl('tR',d.refi[0],d.refi.slice(1).map(r=>r.map(c=>typeof c=='number'?(Math.abs(c)>=1000?M(c):c):c)));else document.getElementById('tR').innerHTML='<div class="card"><div class="muted">Pending: refi targets will be added from the Elevate Mid-Year Update PDFs dated 10/16/26.</div></div>';
+ const SB=(c,a)=>{const tot=Math.max(c||0,a.reduce((x,y)=>x+(y||0),0))||1;return '<div class="stk">'+a.map((v,i)=>`<i data-w="${(v||0)/tot*100}" style="background:${['#e8b923','#22c55e','#38bdf8','#525252'][i]}"></i>`).join('')+'</div>'};
+ document.getElementById('splCards').innerHTML=Object.entries(d.sponsors).map(([k,s])=>`<div class="card"><div class="l">${k}</div><div class="muted">Pref (confirmed) <b style="color:#e8b923">${$(s.pref)}</b> · Principal <b class="pos">${$(s.principal)}</b> · Profit <b style="color:#38bdf8">${$(s.profit)}</b> · Pending <b>${$(s.unalloc)}</b></div><div class="muted">Outstanding principal <b>${$(s.outstanding)}</b> · DPI ${s.dpi.toFixed(2)}x</div>${SB(s.dist,[s.pref,s.principal,s.profit,s.unalloc])}</div>`).join('');
+ tbl('tSpl',['Sponsor','Position','Contributed','Distributed','Pref paid','Principal returned','Profit','Outstanding','Pending','Mix','Status'],d.split.map(r=>[r[0],r[1],$(r[2]),M(r[3]),$(r[4]),$(r[5]),$(r[6]),$(r[7]),$(r[8]),{v:SB(r[3],[r[4],r[5],r[6],r[8]]),c:''},r[9]]));
+ setTimeout(()=>document.querySelectorAll('.stk i').forEach(i=>i.style.width=i.dataset.w+'%'),RM?0:400);
  tbl('tDoc',['Date','Sponsor','Document'],d.docs);}
 
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
