@@ -40,7 +40,16 @@ tr.ft td,tr:last-child td{font-weight:700}
 #gate{background:var(--bg)}#gate input{background:#0c0c0c;color:var(--txt);border:1px solid var(--gb)}#gate button{background:var(--gold);color:#050505;border-radius:999px;font-weight:700}
 .hdl{color:var(--gold)}.muted{color:var(--muted)}
 #wl .card div[style*="border-bottom"]{border-bottom-color:#262626!important}
-</style><style id="signc">.card .v.pos,.big.pos,td.pos,.pos{color:var(--green)!important}.card .v.neg,.big.neg,td.neg,.neg{color:var(--red)!important}.big.pos{text-shadow:0 0 18px #22c55e40}.big.neg{text-shadow:0 0 18px #ff2d3a40}</style></head><body>
+</style><style id="signc">.card .v.pos,.big.pos,td.pos,.pos{color:var(--green)!important}.card .v.neg,.big.neg,td.neg,.neg{color:var(--red)!important}.big.pos{text-shadow:0 0 18px #22c55e40}.big.neg{text-shadow:0 0 18px #ff2d3a40}</style><style id="fx">@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.fx-in{opacity:0;animation:up .6s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes shim{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shim{background:linear-gradient(90deg,#f5c518 0%,#fff3b0 45%,#e8b923 55%,#f5c518 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shim 3.5s linear infinite}
+.shim.pos{background:linear-gradient(90deg,#22c55e,#bbf7d0 50%,#22c55e);background-size:200% 100%;-webkit-background-clip:text;background-clip:text}
+.bar{height:5px;background:#262626;border-radius:9px;margin-top:4px;overflow:hidden;min-width:70px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e8b923,#22c55e);border-radius:9px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.ring{width:54px;height:54px;float:right;margin-top:-4px}.ring circle{fill:none;stroke-width:6}.ring .bg{stroke:#262626}.ring .fg{stroke:#e8b923;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);transform:rotate(-90deg);transform-origin:50% 50%}.ring text{fill:#f5f5f5;font:700 12px Oswald;text-anchor:middle}
+.card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-4px) scale(1.01)}
+.spark{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:99}
+@media(prefers-reduced-motion:reduce){.fx-in{animation:none;opacity:1}.shim{animation:none}.bar i,.ring .fg{transition:none}.card:hover{transform:none}}</style></head><body>
 <div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none">
@@ -76,6 +85,18 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
  if(d.refi&&d.refi.length)tbl('tR',d.refi[0],d.refi.slice(1).map(r=>r.map(c=>typeof c=='number'?(Math.abs(c)>=1000?M(c):c):c)));else document.getElementById('tR').innerHTML='<div class="card"><div class="muted">Pending: refi targets will be added from the Elevate Mid-Year Update PDFs dated 10/16/26.</div></div>';
  tbl('tDoc',['Date','Sponsor','Document'],d.docs);}
-async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';render(d);}catch(x){document.getElementById('err').textContent='Wrong password';}}
+
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countUp(el){const t=el.textContent.trim();const m=t.match(/^(-?\$?)([\d,]+(?:\.\d+)?)(%|x)?$/);if(!m)return;const fin=parseFloat(m[2].replace(/,/g,''));const dec=(m[2].split('.')[1]||'').length;const fmt=v=>m[1]+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(m[3]||'');
+ if(RM){return}const t0=performance.now(),D=1200;el.textContent=fmt(0);(function f(n){const p=Math.min(1,(n-t0)/D),e=1-Math.pow(1-p,3);el.textContent=p<1?fmt(fin*e):t;if(p<1)requestAnimationFrame(f)})(t0);}
+function burst(el){if(RM)return;const r=el.getBoundingClientRect();for(let i=0;i<28;i++){const s=document.createElement('div');s.className='spark';s.style.background=['#e8b923','#f5c518','#22c55e','#fff'][i%4];s.style.left=r.left+r.width/2+'px';s.style.top=r.top+r.height/2+'px';document.body.appendChild(s);const a=Math.random()*6.28,v=60+Math.random()*90;s.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v+40}px) rotate(${v*4}deg)`,opacity:0}],{duration:1100,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>s.remove();}}
+function fx(d){
+ document.querySelectorAll('#app h2,#app .scroll,#app .card').forEach((e,i)=>{e.classList.add('fx-in');e.style.animationDelay=Math.min(i*45,1400)+'ms'});
+ document.querySelectorAll('#cards .v').forEach((e,i)=>{if(i<2)e.classList.add('shim')});
+ const sp=Object.values(d.sponsors);document.querySelectorAll('#cards .card').forEach((c,i)=>{if(i<3)return;const s=sp[i-3];if(!s)return;const C=2*Math.PI*22,p=Math.min(1,s.dpi);c.insertAdjacentHTML('afterbegin',`<svg class="ring" viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="22"/><circle class="fg" cx="27" cy="27" r="22" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="27" y="31">${s.dpi.toFixed(2)}x</text></svg>`);const fg=c.querySelector('.fg');requestAnimationFrame(()=>requestAnimationFrame(()=>fg.style.strokeDashoffset=C*(1-p)));});
+ ['tE','tB'].forEach(id=>{const tb=document.querySelector('#'+id+' table');const hi=[...tb.rows[0].cells].findIndex(c=>c.textContent=='DPI');[...tb.rows].slice(1).forEach(r=>{const c=r.cells[hi],v=parseFloat(c.textContent);if(isNaN(v))return;c.insertAdjacentHTML('beforeend','<div class="bar"><i></i></div>');const b=c.querySelector('i');setTimeout(()=>{b.style.width=Math.min(100,v*100)+'%';if(v>=1)setTimeout(()=>burst(c),1200)},300);});});
+ document.querySelectorAll('#app td,#cards .v,#cards .muted span').forEach(e=>{if(e.children.length==0)countUp(e)});
+ document.querySelectorAll('#app td').forEach(e=>{if(e.firstChild&&e.firstChild.nodeType==3&&e.children.length){const n=e.firstChild;const sp=document.createElement('span');sp.textContent=n.textContent;e.replaceChild(sp,n);countUp(sp)}});}
+async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';render(d);fx(d);}catch(x){document.getElementById('err').textContent='Wrong password';}}
 if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;go(new Event('submit'));}
 </script></body></html>
