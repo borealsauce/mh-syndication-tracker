@@ -59,7 +59,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 <section data-s="B"><h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div></section>
 <h2>Distributions</h2><div class="scroll" id="tD"></div>
 <h2>Pref vs Principal</h2><div class="muted" style="margin-bottom:8px"><span class="lg" style="background:#e8b923"></span>Pref <span class="lg" style="background:#22c55e"></span>Principal returned <span class="lg" style="background:#38bdf8"></span>Profit </div><div class="cards" id="splCards"></div><div class="scroll" style="margin-top:12px" id="tSpl"></div>
-<section data-s="E"><h2>Refinance Targets</h2><div class="scroll" id="tR"></div></section>
+<section><h2>Refinance Targets</h2><div class="scroll" id="tR"></div></section>
 
 <br></div>
 <script>
@@ -104,7 +104,7 @@ function fx(d){
  document.querySelectorAll('#app td').forEach(e=>{if(e.firstChild&&e.firstChild.nodeType==3&&e.children.length){const n=e.firstChild;const sp=document.createElement('span');sp.textContent=n.textContent;e.replaceChild(sp,n);countUp(sp)}});}
 
 let D0;const SPN={E:'Elevate',B:'Boa Vida Group'};
-function view(t){const d=JSON.parse(JSON.stringify(D0));if(t!=='All'){const k=SPN[t];d.sponsors={[k]:d.sponsors[k]};if(t==='E'){d.bvg=[];d.bshares=[]}else{d.elevate=[];d.refi=null}d.split=d.split.filter(r=>r[0]===k);const s=d.sponsors[k];d.totals={contrib:s.contrib,dist:s.dist,dpi:s.dpi}}
+function view(t){const d=JSON.parse(JSON.stringify(D0));if(t!=='All'){const k=SPN[t];d.sponsors={[k]:d.sponsors[k]};const rb=r=>/\(BVG\)/.test(r[0]);if(t==='E'){d.bvg=[];d.bshares=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(r=>!rb(r))]}else{d.elevate=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(rb)]}d.split=d.split.filter(r=>r[0]===k);const s=d.sponsors[k];d.totals={contrib:s.contrib,dist:s.dist,dpi:s.dpi}}
  document.querySelectorAll('#tabs .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('section[data-s]').forEach(x=>x.style.display=(t==='All'||x.dataset.s===t)?'':'none');
  document.querySelectorAll('.fx-in').forEach(e=>{e.classList.remove('fx-in');void e.offsetWidth});
  localStorage.mhtab=t;render(d);fx(d);}
