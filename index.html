@@ -54,6 +54,10 @@ tr.ft td,tr:last-child td{font-weight:700}
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
 <h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
+<section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
+<div class="chartbox"><div id="annLg" class="annlg"></div><div id="annCh" style="position:relative"></div></div>
+<div class="scroll" style="margin-top:12px" id="tAnn"></div><div class="scroll" style="margin-top:12px" id="tAnnD"></div></section>
+
 <section data-s="E"><h2>Elevate (AppFolio)</h2><div class="scroll" id="tE"></div></section>
 <section data-s="B"><h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div></section>
 <section data-s="B"><h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div></section>
@@ -77,7 +81,7 @@ const M=v=>({v:$(v),c:sg(v)});
 function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
  let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
  for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
- document.getElementById('cards').innerHTML=h;
+ document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}
  tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI'],Object.entries(d.sponsors).map(([k,s])=>[k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x']),['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x']);
  tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status'],d.elevate.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4]]),d.sponsors.Elevate?['Total, 10 listed','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','']:null);
  tbl('tB',['Position','Ownership','Contributed','Distributed','DPI'],d.bvg.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2])]));
@@ -111,7 +115,39 @@ function view(t){const d=JSON.parse(JSON.stringify(D0));if(t!=='All'){const k=SP
 document.addEventListener('click',e=>{const b=e.target.closest('#tabs .pill');if(b)view(b.dataset.t)});
 async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';D0=d;view(['All','E','B'].includes(localStorage.mhtab)?localStorage.mhtab:'All');}catch(x){document.getElementById('err').textContent='Wrong password';}}
 if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;go(new Event('submit'));}
-</script><!--SORTABLE-START--><script>
+</script><style>.annlg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:8px;font-size:12px}.annlg span{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;color:#d4d4d4}.annlg span.off{opacity:.35;text-decoration:line-through}.annlg i{width:11px;height:11px;border-radius:3px;display:inline-block}.annlg b{font:600 11px Inter;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-right:2px}#annTip{position:absolute;pointer-events:none;background:#0c0c0c;border:1px solid var(--gold);border-radius:8px;padding:6px 9px;font-size:12px;color:#f5f5f5;white-space:nowrap;display:none;z-index:5}#annCh svg{width:100%;height:auto;display:block}#annCh .seg{cursor:pointer}#annCh .seg:hover{filter:brightness(1.25)}</style>
+<script>
+var ANN_OFF={};
+function annual(d){const A=d.annual||[];if(!A.length)return;
+ const f=v=>'$'+Math.round(v).toLocaleString(),fk=v=>v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+Math.round(v/1e3)+'K';
+ const deals=[];A.forEach(r=>{if(!deals.some(x=>x[0]==r[0]&&x[1]==r[1]))deals.push([r[0],r[1]])});
+ deals.sort((a,b)=>a[0]==b[0]?0:(a[0]=='Elevate'?-1:1));
+ const EC=['#e8b923','#f59e0b','#fcd34d','#d97706','#fde68a','#b45309','#facc15','#ca8a04','#fbbf24','#92400e'],BC=['#38bdf8','#2563eb','#7dd3fc','#1d4ed8','#93c5fd','#0ea5e9','#60a5fa','#0369a1'];
+ let ei=0,bi=0;const col={};deals.forEach(x=>col[x.join('|')]=x[0]=='Elevate'?EC[ei++%EC.length]:BC[bi++%BC.length]);
+ const yrs=[...new Set(A.map(r=>r[2]))].sort();
+ const val=(k,y)=>{let s=0;A.forEach(r=>{if(r[0]+'|'+r[1]==k&&r[2]==y)s+=r[3]});return s};
+ let lg='';['Elevate','BVG'].forEach(sp=>{lg+='<b>'+sp+'</b>'+deals.filter(x=>x[0]==sp).map(x=>{const k=x.join('|');return `<span data-k="${k}" class="${ANN_OFF[k]?'off':''}"><i style="background:${col[k]}"></i>${x[1]}</span>`}).join('')+'<span style="flex-basis:100%;height:0"></span>'});
+ const L=document.getElementById('annLg');L.innerHTML=lg;L.onclick=e=>{const s=e.target.closest('span[data-k]');if(!s)return;ANN_OFF[s.dataset.k]=!ANN_OFF[s.dataset.k];annual(d)};
+ const on=deals.filter(x=>!ANN_OFF[x.join('|')]).map(x=>x.join('|'));
+ const tot=yrs.map(y=>on.reduce((a,k)=>a+val(k,y),0)),mx=Math.max(...tot,1)*1.12;
+ const W=900,H=340,pl=56,pr=10,pt=24,pb=30,bw=(W-pl-pr)/yrs.length,sc=v=>(H-pt-pb)*v/mx;
+ let g='';for(let i=0;i<=4;i++){const v=mx/4*i,yy=H-pb-sc(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#262626"/><text x="${pl-6}" y="${yy+4}" fill="#a3a3a3" font-size="11" text-anchor="end">${fk(v)}</text>`}
+ yrs.forEach((y,i)=>{let base=H-pb;const x=pl+i*bw+bw*.18,w=bw*.64;
+  on.forEach(k=>{const v=val(k,y);if(!v)return;const h=sc(v);base-=h;const[sp,nm]=k.split('|');g+=`<rect class="seg" x="${x}" y="${base}" width="${w}" height="${Math.max(h,.5)}" fill="${col[k]}" data-t="${nm} (${sp}) · ${y}: ${f(v)}"/>`});
+  g+=`<text x="${x+w/2}" y="${base-6}" fill="#f5f5f5" font-size="12" font-family="Oswald" text-anchor="middle">${tot[i]?fk(tot[i]):''}</text><text x="${x+w/2}" y="${H-pb+18}" fill="#d4d4d4" font-size="12" text-anchor="middle">${y}</text>`});
+ const C=document.getElementById('annCh');C.innerHTML=`<svg viewBox="0 0 ${W} ${H}" font-family="Inter">${g}</svg><div id="annTip"></div>`;
+ const tp=C.querySelector('#annTip');
+ const sh=e=>{const r=e.target.closest('.seg');if(!r){tp.style.display='none';return}const p=(e.touches?e.touches[0]:e),b=C.getBoundingClientRect();tp.textContent=r.dataset.t;tp.style.display='block';let lx=p.clientX-b.left+12;if(lx+tp.offsetWidth>b.width)lx=b.width-tp.offsetWidth-4;tp.style.left=Math.max(0,lx)+'px';tp.style.top=(p.clientY-b.top-36)+'px'};
+ C.onmousemove=sh;C.onmouseleave=()=>tp.style.display='none';C.ontouchstart=sh;
+ const sp=(s,y)=>deals.filter(x=>x[0]==s).reduce((a,x)=>a+val(x.join('|'),y),0);
+ const rows=yrs.map(y=>[y,f(sp('Elevate',y)),f(sp('BVG',y)),{v:f(sp('Elevate',y)+sp('BVG',y)),c:'pos'}]);
+ const TE=yrs.reduce((a,y)=>a+sp('Elevate',y),0),TB=yrs.reduce((a,y)=>a+sp('BVG',y),0);
+ tbl('tAnn',['Year','Elevate','BVG','Total'],rows,['TOTAL',f(TE),f(TB),{v:f(TE+TB),c:'pos'}]);
+ const dr=deals.map(x=>{const k=x.join('|');const vs=yrs.map(y=>val(k,y));return [x[1],x[0],...vs.map(v=>v?f(v):'—'),f(vs.reduce((a,b)=>a+b,0))]});
+ tbl('tAnnD',['Deal','Sponsor',...yrs.map(String),'Total'],dr,['TOTAL','',...yrs.map(y=>f(sp('Elevate',y)+sp('BVG',y))),f(TE+TB)]);
+}
+</script>
+<!--SORTABLE-START--><script>
 /* Shared sortable tables (Grok Bot trackers). Click any header: asc/desc toggle with ▲/▼.
    Works on dynamically rendered tables via event delegation. Totals (tfoot, .total/.ft/.tot rows,
    or first cell TOTAL/ALL-TIME/GRAND) stay pinned at bottom. Group-label rows (fewer cells / colspan)
