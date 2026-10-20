@@ -1,0 +1,224 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>MH Syndication Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<script>if(window.Chart){Chart.defaults.color="#d4d4d4";Chart.defaults.borderColor="#262626";Chart.defaults.font.family="Inter";}</script>
+<style>.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}.pill{border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:999px;padding:7px 16px;font:600 13px Inter,system-ui;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);transition:all .15s}.pill:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(30,58,138,.18)}.pill.on{background:var(--gold);color:#fff;border-color:var(--gold)}@media(max-width:600px){.pill{padding:6px 12px;font-size:12px}}.byw{display:flex;gap:16px;align-items:flex-start}.byw>.scroll{flex:1 1 auto;min-width:0}.byc{flex:0 0 460px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}@media(max-width:1000px){.byw{flex-direction:column}.byc{flex-basis:auto;width:100%}}
+:root{--bg:#f3f4f6;--line:#d1d5db;--gold:#1e3a8a;--txt:#111827;--muted:#a3a3a3;--red:#e11d2e;--green:#22c55e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px Inter,system-ui,sans-serif}
+h1,h2{font-family:Oswald,sans-serif;letter-spacing:.04em;margin:0;color:var(--gold)}h2{font-size:18px;margin:28px 0 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}.top{background:#fff;border-bottom:1px solid var(--line);padding:18px 0}
+.big{font:700 32px Oswald;color:var(--gold)}.muted{color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.card .l{font:700 11px Inter;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.card .v{font:700 24px Oswald;margin-top:4px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}th{background:var(--gold);color:#fff;font-weight:600}
+td:first-child,th:first-child{text-align:left}.neg{color:var(--red)}.pos{color:var(--green)}.scroll{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.chartbox{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+#gate{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:9}
+#gate form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}
+#gate input{font:18px Inter;padding:8px 12px;border:1px solid var(--line);border-radius:8px;width:180px;text-align:center}
+#gate button{margin-left:6px;font:600 15px Inter;padding:9px 16px;border:0;border-radius:8px;background:var(--gold);color:#fff;cursor:pointer}
+</style><style>.sec{position:relative}.sec.drag{opacity:.55;outline:2px dashed var(--gold);border-radius:10px}.hdl{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;display:inline-block;padding:2px 10px;margin-right:6px;color:var(--gold);font-size:20px;vertical-align:middle}.swp{float:right;font-size:12px;border:1px solid #ccd;border-radius:12px;background:#fff;padding:2px 10px;cursor:pointer}#rstL{border:1px solid #ccd;border-radius:14px;background:#fff;padding:4px 12px;font-size:12px;cursor:pointer;margin:10px 0}</style><style id="socal">
+:root{--bg:#050505;--line:#262626;--gold:#e8b923;--txt:#f5f5f5;--muted:#a3a3a3;--red:#ff2d3a;--green:#22c55e;--surf:#141414;--surf2:#1c1c1c;--gb:#e8b92347}
+body{background:radial-gradient(1200px 500px at 50% -200px,#e8b9231a,transparent),var(--bg);color:var(--txt)}
+.top{background:linear-gradient(180deg,#0c0c0c,#050505);border-bottom:1px solid var(--gb);box-shadow:0 12px 40px #0000008c;position:relative}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,#e8b923,transparent)}
+h1{color:var(--gold);text-transform:uppercase;letter-spacing:.08em}h2{color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:600;border-left:3px solid var(--gold);padding-left:10px}
+.big{color:#f5c518;text-shadow:0 0 18px #e8b92340}
+.card,.chartbox,.byc,#gate form{background:linear-gradient(180deg,#1c1c1c,#141414);border:1px solid var(--gb);border-radius:1rem;box-shadow:0 1px 2px #0000001a;transition:transform .15s,box-shadow .15s}
+.card:hover,.chartbox:hover,.byc:hover{transform:translateY(-2px);box-shadow:0 14px 36px #00000073,0 0 0 1px #e8b923}
+.card .l{color:var(--muted)}.card .v{color:var(--txt)}
+table{background:var(--surf);border:1px solid var(--gb);border-radius:1rem;color:var(--txt)}
+th{background:#0c0c0c;color:var(--gold);text-transform:uppercase;font:600 11px Inter;letter-spacing:.12em;border-bottom:1px solid var(--gold)}
+td{border-bottom:1px solid #202020}tr:nth-child(even) td{background:#0c0c0c66}tr:hover td{background:#e8b92314}
+tr.ft td,tr:last-child td{font-weight:700}
+.pill{background:var(--surf2);color:var(--ink,#d4d4d4);border:1px solid var(--line);box-shadow:none}.pill:hover{border-color:var(--gold);box-shadow:0 0 18px #e8b92355}
+.pill.on{background:linear-gradient(180deg,#f5c518,#e8b923);color:#050505;border-color:#e8b923;box-shadow:0 0 18px #e8b923d9,0 4px 12px #00000080}
+.swp,#rstL{background:var(--surf2);color:var(--gold);border:1px solid var(--gb);border-radius:999px}.swp:hover,#rstL:hover{border-color:var(--gold)}
+#gate{background:var(--bg)}#gate input{background:#0c0c0c;color:var(--txt);border:1px solid var(--gb)}#gate button{background:var(--gold);color:#050505;border-radius:999px;font-weight:700}
+.hdl{color:var(--gold)}.muted{color:var(--muted)}
+#wl .card div[style*="border-bottom"]{border-bottom-color:#262626!important}
+</style><style id="signc">.card .v.pos,.big.pos,td.pos,.pos{color:var(--green)!important}.card .v.neg,.big.neg,td.neg,.neg{color:var(--red)!important}.big.pos{text-shadow:0 0 18px #22c55e40}.big.neg{text-shadow:0 0 18px #ff2d3a40}</style><style id="fx">@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.fx-in{opacity:0;animation:up .6s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes shim{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shim{background:linear-gradient(90deg,#f5c518 0%,#fff3b0 45%,#e8b923 55%,#f5c518 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shim 3.5s linear infinite}
+.shim.pos{background:linear-gradient(90deg,#22c55e,#bbf7d0 50%,#22c55e);background-size:200% 100%;-webkit-background-clip:text;background-clip:text}
+.bar{height:5px;background:#262626;border-radius:9px;margin-top:4px;overflow:hidden;min-width:70px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e8b923,#22c55e);border-radius:9px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.ring{width:54px;height:54px;float:right;margin-top:-4px}.ring circle{fill:none;stroke-width:6}.ring .bg{stroke:#262626}.ring .fg{stroke:#e8b923;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);transform:rotate(-90deg);transform-origin:50% 50%}.ring text{fill:#f5f5f5;font:700 12px Oswald;text-anchor:middle}
+.card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-4px) scale(1.01)}
+.spark{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:99}
+@media(prefers-reduced-motion:reduce){.fx-in{animation:none;opacity:1}.shim{animation:none}.bar i,.ring .fg{transition:none}.card:hover{transform:none}}</style><style>.lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}.stk{display:flex;height:8px;border-radius:9px;overflow:hidden;background:#1c1c1c;min-width:140px;margin-top:3px}.stk i{display:block;height:100%;width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}@media(prefers-reduced-motion:reduce){.stk i{transition:none}}</style></head><body>
+<div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
+<div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
+<div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
+<h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
+<h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above a full 5%/yr of invested capital, counted from Jan 1 of the year after each investment year (2026 pro-rated thru 10/19/26); positive excess only. BVG years held / annual avg / shortfall use the same start dates. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). <span id="crPre"></span></div><div class="scroll" id="tCR"></div>
+<section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
+<div class="chartbox"><div id="annLg" class="annlg"></div><div id="annCh" style="position:relative"></div></div>
+<div class="scroll" style="margin-top:12px" id="tAnn"></div><div class="scroll" style="margin-top:12px" id="tAnnD"></div></section>
+
+<section data-s="E"><h2>Elevate (AppFolio)</h2><div class="scroll" id="tE"></div></section>
+<section data-s="B"><h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div></section>
+<section data-s="B"><h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div></section>
+<h2>Distributions</h2><div class="scroll" id="tD"></div>
+<h2>Pref vs Principal</h2><div class="muted" style="margin-bottom:8px"><span class="lg" style="background:#e8b923"></span>Pref <span class="lg" style="background:#22c55e"></span>Principal returned <span class="lg" style="background:#38bdf8"></span>Profit </div><div class="cards" id="splCards"></div><div class="scroll" style="margin-top:12px" id="tSpl"></div>
+<section><h2>Refinance Targets</h2><div class="scroll" id="tR"></div></section>
+
+<br></div>
+<script>
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(pw){const e=await (await fetch('data.enc.json',{cache:'no-store'})).json();
+ const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+ const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+ return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct))));}
+const $=v=>v==null||v===''?'':(v<0?'-':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sg=v=>v==null?'':v>0?'pos':v<0?'neg':'';
+const pc=v=>v==null?'':(typeof v=='number'?v+'%':v);
+const dp=(d,c)=>d==null||!c?'':(d/c).toFixed(2)+'x';
+function tbl(id,h,rows,foot){document.getElementById(id).innerHTML='<table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>').join('')+(foot?'<tr class="ft">'+foot.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>':'')+'</table>';}
+const M=v=>({v:$(v),c:sg(v)});
+function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
+ let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
+ for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
+ document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
+ tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI'],Object.entries(d.sponsors).map(([k,s])=>[k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x']),['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x']);
+ const YH=['Years held','Annual Avg','Avg Yield %','Pref %','Annual Shortfall','Total Shortfall'];
+ const yc=m=>m?[m[0].toFixed(2),$(m[1]),m[2]==null?'—':m[2].toFixed(2)+'%',m[3]+'%',m[4]==null?'—':(m[4]>0?{v:$(m[4]),c:'neg'}:'$0.00'),m[5]==null?'—':(m[5]>0?{v:$(m[5]),c:'neg'}:'$0.00')]:['—','—','—','—','—','—'];
+ const yt=(rows,ms,pr)=>{let a=0,iv=0,sa=0,st=0;ms.forEach((m,i)=>{if(!m)return;a+=m[1];if(m[2]!=null)iv+=rows[i][2]||0;sa+=m[4]||0;st+=m[5]||0});return['',$(a),iv?(a/iv*100).toFixed(2)+'%':'—',pr+'%',sa?{v:$(sa),c:'neg'}:'$0.00',st?{v:$(st),c:'neg'}:'$0.00']};
+ const yE=d.yE||[],yB=d.yB||[];const EI=D0.elevate.map(r=>r[0]),BI=D0.bvg.map(r=>r[0]);const mE=d.elevate.map(r=>yE[EI.indexOf(r[0])]),mB=d.bvg.map(r=>yB[BI.indexOf(r[0])]);
+ tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...yc(mE[i])]),d.sponsors.Elevate?['Total, 10 listed','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',...yt(d.elevate,mE,8)]:null);
+ tbl('tB',['Position','Ownership','Contributed','Distributed','DPI',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',...yt(d.bvg,mB,5)]:null);
+ tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
+ const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
+ tbl('tD',['Sponsor','Investment','Distributed to date'],D);
+ if(d.refi&&d.refi.length)tbl('tR',d.refi[0],d.refi.slice(1).map(r=>r.map(c=>typeof c=='number'?(Math.abs(c)>=1000?M(c):c):c)));;
+ const SB=(c,a)=>{const tot=Math.max(c||0,a.reduce((x,y)=>x+(y||0),0))||1;return '<div class="stk">'+a.map((v,i)=>`<i data-w="${(v||0)/tot*100}" style="background:${['#e8b923','#22c55e','#38bdf8','#525252'][i]}"></i>`).join('')+'</div>'};
+ document.getElementById('splCards').innerHTML=Object.entries(d.sponsors).map(([k,s])=>`<div class="card"><div class="l">${k}</div><div class="muted">Pref <b style="color:#e8b923">${$(s.pref)}</b> · Principal <b class="pos">${$(s.principal)}</b> · Profit <b style="color:#38bdf8">${$(s.profit)}</b></div><div class="muted">Outstanding principal <b>${$(s.outstanding)}</b> · DPI ${s.dpi.toFixed(2)}x</div>${SB(s.dist,[s.pref,s.principal,s.profit,s.unalloc])}</div>`).join('');
+ tbl('tSpl',['Sponsor','Position','Contributed','Distributed','Pref paid','Principal returned','Profit','Outstanding','Mix'],d.split.map(r=>[r[0],r[1],$(r[2]),M(r[3]),$(r[4]),$(r[5]),$(r[6]),$(r[7]),{v:SB(r[3],[r[4],r[5],r[6],0]),c:''}]));
+ setTimeout(()=>document.querySelectorAll('.stk i').forEach(i=>i.style.width=i.dataset.w+'%'),RM?0:400);
+}
+
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countUp(el){const t=el.textContent.trim();const m=t.match(/^(-?\$?)([\d,]+(?:\.\d+)?)(%|x)?$/);if(!m)return;const fin=parseFloat(m[2].replace(/,/g,''));const dec=(m[2].split('.')[1]||'').length;const fmt=v=>m[1]+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(m[3]||'');
+ if(RM){return}const t0=performance.now(),D=1200;el.textContent=fmt(0);(function f(n){const p=Math.min(1,(n-t0)/D),e=1-Math.pow(1-p,3);el.textContent=p<1?fmt(fin*e):t;if(p<1)requestAnimationFrame(f)})(t0);}
+function burst(el){if(RM)return;const r=el.getBoundingClientRect();for(let i=0;i<28;i++){const s=document.createElement('div');s.className='spark';s.style.background=['#e8b923','#f5c518','#22c55e','#fff'][i%4];s.style.left=r.left+r.width/2+'px';s.style.top=r.top+r.height/2+'px';document.body.appendChild(s);const a=Math.random()*6.28,v=60+Math.random()*90;s.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v+40}px) rotate(${v*4}deg)`,opacity:0}],{duration:1100,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>s.remove();}}
+function fx(d){
+ document.querySelectorAll('#app h2,#app .scroll,#app .card').forEach((e,i)=>{e.classList.add('fx-in');e.style.animationDelay=Math.min(i*45,1400)+'ms'});
+ document.querySelectorAll('#cards .v').forEach((e,i)=>{if(i<2)e.classList.add('shim')});
+ const sp=Object.values(d.sponsors);document.querySelectorAll('#cards .card').forEach((c,i)=>{if(i<3)return;const s=sp[i-3];if(!s)return;const C=2*Math.PI*22,p=Math.min(1,s.dpi);c.insertAdjacentHTML('afterbegin',`<svg class="ring" viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="22"/><circle class="fg" cx="27" cy="27" r="22" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="27" y="31">${s.dpi.toFixed(2)}x</text></svg>`);const fg=c.querySelector('.fg');requestAnimationFrame(()=>requestAnimationFrame(()=>fg.style.strokeDashoffset=C*(1-p)));});
+ ['tE','tB'].forEach(id=>{const tb=document.querySelector('#'+id+' table');const hi=[...tb.rows[0].cells].findIndex(c=>c.textContent=='DPI');[...tb.rows].slice(1).forEach(r=>{const c=r.cells[hi],v=parseFloat(c.textContent);if(isNaN(v))return;c.insertAdjacentHTML('beforeend','<div class="bar"><i></i></div>');const b=c.querySelector('i');setTimeout(()=>{b.style.width=Math.min(100,v*100)+'%';if(v>=1)setTimeout(()=>burst(c),1200)},300);});});
+ document.querySelectorAll('#app td,#cards .v,#cards .muted span').forEach(e=>{if(e.children.length==0)countUp(e)});
+ document.querySelectorAll('#app td').forEach(e=>{if(e.firstChild&&e.firstChild.nodeType==3&&e.children.length){const n=e.firstChild;const sp=document.createElement('span');sp.textContent=n.textContent;e.replaceChild(sp,n);countUp(sp)}});}
+
+let D0;const SPN={E:'Elevate',B:'Boa Vida Group'};
+function view(t){const d=JSON.parse(JSON.stringify(D0));if(t!=='All'){const k=SPN[t];d.sponsors={[k]:d.sponsors[k]};const rb=r=>/\(BVG\)/.test(r[0]);if(t==='E'){d.bvg=[];d.bshares=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(r=>!rb(r))]}else{d.elevate=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(rb)]}d.split=d.split.filter(r=>r[0]===k);const s=d.sponsors[k];d.totals={contrib:s.contrib,dist:s.dist,dpi:s.dpi}}
+ document.querySelectorAll('#tabs .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('section[data-s]').forEach(x=>x.style.display=(t==='All'||x.dataset.s===t)?'':'none');
+ document.querySelectorAll('.fx-in').forEach(e=>{e.classList.remove('fx-in');void e.offsetWidth});
+ localStorage.mhtab=t;render(d);fx(d);}
+document.addEventListener('click',e=>{const b=e.target.closest('#tabs .pill');if(b)view(b.dataset.t)});
+async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';D0=d;view(['All','E','B'].includes(localStorage.mhtab)?localStorage.mhtab:'All');}catch(x){document.getElementById('err').textContent='Wrong password';}}
+if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;go(new Event('submit'));}
+</script><style>.annlg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:8px;font-size:12px}.annlg span{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;color:#d4d4d4}.annlg span.off{opacity:.35;text-decoration:line-through}.annlg i{width:11px;height:11px;border-radius:3px;display:inline-block}.annlg b{font:600 11px Inter;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-right:2px}#annTip{position:absolute;pointer-events:none;background:#0c0c0c;border:1px solid var(--gold);border-radius:8px;padding:6px 9px;font-size:12px;color:#f5f5f5;white-space:nowrap;display:none;z-index:5}#annCh svg{width:100%;height:auto;display:block}#annCh .seg{cursor:pointer}#annCh .seg:hover{filter:brightness(1.25)}</style>
+<script>
+var ANN_OFF={};
+function capret(d){const c=d.capret;if(!c)return;document.getElementById('crCards').innerHTML=`<div class="card"><div class="l">Total capital returned</div><div class="v">${$(c.total)}</div></div><div class="card"><div class="l">Elevate (refinancing, owner-stated)</div><div class="v">${$(c.elevate)}</div></div><div class="card"><div class="l">BVG (excess over 5%/yr)</div><div class="v">${$(c.bvg)}</div></div>`;
+ document.getElementById('crPre').textContent=c.pre&&c.pre.length?'Pre-start distributions left out: '+c.pre.map(x=>x[0]+' '+x[1]+' '+$(x[2])).join('; ')+'.':'';const Y=[2020,2021,2022,2023,2024,2025,'2026 YTD'];const sm=i=>c.rows.reduce((a,r)=>a+r[i],0);
+ tbl('tCR',['BVG position','Invested','Start date',...Y.map(String),'Total excess'],c.rows.map(r=>[r[0],$(r[1]),r[2],...r.slice(3).map($)]),['TOTAL',$(sm(1)),'',...Y.map((_,i)=>$(sm(3+i))),$(sm(10))])}
+function annual(d){const A=d.annual||[];if(!A.length)return;
+ const f=v=>'$'+Math.round(v).toLocaleString(),fk=v=>v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+Math.round(v/1e3)+'K';
+ const deals=[];A.forEach(r=>{if(!deals.some(x=>x[0]==r[0]&&x[1]==r[1]))deals.push([r[0],r[1]])});
+ deals.sort((a,b)=>a[0]==b[0]?0:(a[0]=='Elevate'?-1:1));
+ const EC=['#e8b923','#f59e0b','#fcd34d','#d97706','#fde68a','#b45309','#facc15','#ca8a04','#fbbf24','#92400e'],BC=['#38bdf8','#2563eb','#7dd3fc','#1d4ed8','#93c5fd','#0ea5e9','#60a5fa','#0369a1'];
+ let ei=0,bi=0;const col={};deals.forEach(x=>col[x.join('|')]=x[0]=='Elevate'?EC[ei++%EC.length]:BC[bi++%BC.length]);
+ const yrs=[...new Set(A.map(r=>r[2]))].sort();
+ const val=(k,y)=>{let s=0;A.forEach(r=>{if(r[0]+'|'+r[1]==k&&r[2]==y)s+=r[3]});return s};
+ let lg='';['Elevate','BVG'].forEach(sp=>{lg+='<b>'+sp+'</b>'+deals.filter(x=>x[0]==sp).map(x=>{const k=x.join('|');return `<span data-k="${k}" class="${ANN_OFF[k]?'off':''}"><i style="background:${col[k]}"></i>${x[1]}</span>`}).join('')+'<span style="flex-basis:100%;height:0"></span>'});
+ const L=document.getElementById('annLg');L.innerHTML=lg;L.onclick=e=>{const s=e.target.closest('span[data-k]');if(!s)return;ANN_OFF[s.dataset.k]=!ANN_OFF[s.dataset.k];annual(d)};
+ const on=deals.filter(x=>!ANN_OFF[x.join('|')]).map(x=>x.join('|'));
+ const tot=yrs.map(y=>on.reduce((a,k)=>a+val(k,y),0)),mx=Math.max(...tot,1)*1.12;
+ const W=900,H=340,pl=56,pr=10,pt=24,pb=30,bw=(W-pl-pr)/yrs.length,sc=v=>(H-pt-pb)*v/mx;
+ let g='';for(let i=0;i<=4;i++){const v=mx/4*i,yy=H-pb-sc(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#262626"/><text x="${pl-6}" y="${yy+4}" fill="#a3a3a3" font-size="11" text-anchor="end">${fk(v)}</text>`}
+ yrs.forEach((y,i)=>{let base=H-pb;const x=pl+i*bw+bw*.18,w=bw*.64;
+  on.forEach(k=>{const v=val(k,y);if(!v)return;const h=sc(v);base-=h;const[sp,nm]=k.split('|');g+=`<rect class="seg" x="${x}" y="${base}" width="${w}" height="${Math.max(h,.5)}" fill="${col[k]}" data-t="${nm} (${sp}) · ${y}: ${f(v)}"/>`});
+  g+=`<text x="${x+w/2}" y="${base-6}" fill="#f5f5f5" font-size="12" font-family="Oswald" text-anchor="middle">${tot[i]?fk(tot[i]):''}</text><text x="${x+w/2}" y="${H-pb+18}" fill="#d4d4d4" font-size="12" text-anchor="middle">${y}</text>`});
+ const C=document.getElementById('annCh');C.innerHTML=`<svg viewBox="0 0 ${W} ${H}" font-family="Inter">${g}</svg><div id="annTip"></div>`;
+ const tp=C.querySelector('#annTip');
+ const sh=e=>{const r=e.target.closest('.seg');if(!r){tp.style.display='none';return}const p=(e.touches?e.touches[0]:e),b=C.getBoundingClientRect();tp.textContent=r.dataset.t;tp.style.display='block';let lx=p.clientX-b.left+12;if(lx+tp.offsetWidth>b.width)lx=b.width-tp.offsetWidth-4;tp.style.left=Math.max(0,lx)+'px';tp.style.top=(p.clientY-b.top-36)+'px'};
+ C.onmousemove=sh;C.onmouseleave=()=>tp.style.display='none';C.ontouchstart=sh;
+ const sp=(s,y)=>deals.filter(x=>x[0]==s).reduce((a,x)=>a+val(x.join('|'),y),0);
+ const rows=yrs.map(y=>[y,f(sp('Elevate',y)),f(sp('BVG',y)),{v:f(sp('Elevate',y)+sp('BVG',y)),c:'pos'}]);
+ const TE=yrs.reduce((a,y)=>a+sp('Elevate',y),0),TB=yrs.reduce((a,y)=>a+sp('BVG',y),0);
+ tbl('tAnn',['Year','Elevate','BVG','Total'],rows,['TOTAL',f(TE),f(TB),{v:f(TE+TB),c:'pos'}]);
+ const dr=deals.map(x=>{const k=x.join('|');const vs=yrs.map(y=>val(k,y));return [x[1],x[0],...vs.map(v=>v?f(v):'—'),f(vs.reduce((a,b)=>a+b,0))]});
+ tbl('tAnnD',['Deal','Sponsor',...yrs.map(String),'Total'],dr,['TOTAL','',...yrs.map(y=>f(sp('Elevate',y)+sp('BVG',y))),f(TE+TB)]);
+}
+</script>
+<!--SORTABLE-START--><script>
+/* Shared sortable tables (Grok Bot trackers). Click any header: asc/desc toggle with ▲/▼.
+   Works on dynamically rendered tables via event delegation. Totals (tfoot, .total/.ft/.tot rows,
+   or first cell TOTAL/ALL-TIME/GRAND) stay pinned at bottom. Group-label rows (fewer cells / colspan)
+   keep their members: sorting happens within each group. Uses td[data-v] when present.
+   Skip: th with own onclick, th.nosort, or table[data-nosort]. */
+(function(){
+  if(window.__sortableShared)return;window.__sortableShared=1;
+  var st=document.createElement('style');
+  st.textContent='table:not([data-nosort]) th:not(.nosort){cursor:pointer;user-select:none}th .srt-ar{font-size:.8em;opacity:.85;margin-left:3px}';
+  (document.head||document.documentElement).appendChild(st);
+  var MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  function key(cell){
+    if(!cell)return null;
+    var raw=cell.dataset&&cell.dataset.v!=null?cell.dataset.v:cell.textContent;
+    var s=String(raw).replace(/[▲▼]/g,'').trim();
+    if(!s||s==='—'||s==='-'||s==='–'||/^n\/?a$/i.test(s))return null;
+    var m;
+    if((m=s.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/)))return {n:Date.UTC(+m[1],+m[2]-1,+(m[3]||1))};
+    if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/))){var y=+m[3];if(y<100)y+=2000;return {n:Date.UTC(y,+m[1]-1,+m[2])};}
+    if((m=s.match(/^([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})$/))&&MON[m[1].toLowerCase()])return {n:Date.UTC(+m[3],MON[m[1].toLowerCase()]-1,+m[2])};
+    if((m=s.match(/^([A-Za-z]{3})[a-z]* (\d{4})$/))&&MON[m[1].toLowerCase()])return {n:Date.UTC(+m[2],MON[m[1].toLowerCase()]-1,1)};
+    if((m=s.match(/^Q([1-4]) (\d{4})$/i)))return {n:Date.UTC(+m[2],(+m[1]-1)*3,1)};
+    var t=s.replace(/[$,%x×\s]|USD/gi,'').replace(/^\+/,'').replace(/[−–]/g,'-');
+    var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+    var mult=1;if((m=t.match(/^(-?[\d.]+)([KMB])$/i))){t=m[1];mult={k:1e3,m:1e6,b:1e9}[m[2].toLowerCase()];}
+    if(/^-?\d*\.?\d+$/.test(t))return {n:parseFloat(t)*mult*(neg?-1:1)};
+    return {s:s.toLowerCase()};
+  }
+  function pinned(r){
+    if(r.parentElement&&r.parentElement.tagName==='TFOOT')return true;
+    if(/(^|\s)(total|totals|ft|tot|sum|grand|pinned)(\s|$)/i.test(r.className))return true;
+    var c=r.cells[0];return !!c&&/^\s*(TOTAL|TOTALS|ALL-TIME|GRAND TOTAL)\b/i.test(c.textContent);
+  }
+  document.addEventListener('click',function(e){
+    var th=e.target.closest&&e.target.closest('th');if(!th||th.onclick||th.classList.contains('nosort'))return;
+    var tb=th.closest('table');if(!tb||tb.hasAttribute('data-nosort'))return;
+    var hr=th.parentElement;if(hr.parentElement.tagName==='TFOOT')return;
+    var ci=0;for(var k=0;k<hr.cells.length&&hr.cells[k]!==th;k++)ci+=hr.cells[k].colSpan||1;
+    var ncol=0;for(k=0;k<hr.cells.length;k++)ncol+=hr.cells[k].colSpan||1;
+    var dir=th.dataset.sdir==='asc'?'desc':'asc',m=dir==='asc'?1:-1;
+    tb.querySelectorAll('th').forEach(function(x){delete x.dataset.sdir;var a=x.querySelector('.srt-ar');if(a)a.remove();});
+    th.dataset.sdir=dir;var ar=document.createElement('span');ar.className='srt-ar';ar.textContent=dir==='asc'?'▲':'▼';th.appendChild(ar);
+    var bodies=tb.tBodies.length?[].slice.call(tb.tBodies):[tb];
+    bodies.forEach(function(body){
+      var all=[].slice.call(body.rows).filter(function(r){return r!==hr&&!(r.cells.length&&r.cells[0].tagName==='TH'&&!r.querySelector('td'));});
+      var pins=[],groups=[{head:null,rows:[]}];
+      all.forEach(function(r){
+        if(pinned(r)){pins.push(r);return;}
+        var w=0;for(var j=0;j<r.cells.length;j++)w+=r.cells[j].colSpan||1;
+        if(r.cells.length===1&&ncol>1)groups.push({head:r,rows:[]});else groups[groups.length-1].rows.push(r);
+      });
+      function cellAt(r){var x=0;for(var j=0;j<r.cells.length;j++){if(x===ci)return r.cells[j];x+=r.cells[j].colSpan||1;}return null;}
+      groups.forEach(function(g){
+        g.rows.sort(function(a,b){var A=key(cellAt(a)),B=key(cellAt(b));
+          if(!A&&!B)return 0;if(!A)return 1;if(!B)return -1;
+          if(A.n!=null&&B.n!=null)return (A.n-B.n)*m;
+          return String(A.s!=null?A.s:A.n).localeCompare(String(B.s!=null?B.s:B.n),undefined,{numeric:true})*m;});
+        if(g.head)body.appendChild(g.head);g.rows.forEach(function(r){body.appendChild(r);});
+      });
+      pins.forEach(function(r){body.appendChild(r);});
+    });
+  },false);
+})();
+
+</script><!--SORTABLE-END-->
+</body></html>
