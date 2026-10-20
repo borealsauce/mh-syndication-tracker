@@ -84,8 +84,12 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
  document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
  tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI'],Object.entries(d.sponsors).map(([k,s])=>[k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x']),['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x']);
- tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status'],d.elevate.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4]]),d.sponsors.Elevate?['Total, 10 listed','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','']:null);
- tbl('tB',['Position','Ownership','Contributed','Distributed','DPI'],d.bvg.map(r=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2])]));
+ const YH=['Years held','Annual Avg','Avg Yield %','Pref %','Annual Shortfall','Total Shortfall'];
+ const yc=m=>m?[m[0].toFixed(2),$(m[1]),m[2]==null?'—':m[2].toFixed(2)+'%',m[3]+'%',m[4]==null?'—':(m[4]>0?{v:$(m[4]),c:'neg'}:'$0.00'),m[5]==null?'—':(m[5]>0?{v:$(m[5]),c:'neg'}:'$0.00')]:['—','—','—','—','—','—'];
+ const yt=(rows,ms,pr)=>{let a=0,iv=0,sa=0,st=0;ms.forEach((m,i)=>{if(!m)return;a+=m[1];if(m[2]!=null)iv+=rows[i][2]||0;sa+=m[4]||0;st+=m[5]||0});return['',$(a),iv?(a/iv*100).toFixed(2)+'%':'—',pr+'%',sa?{v:$(sa),c:'neg'}:'$0.00',st?{v:$(st),c:'neg'}:'$0.00']};
+ const yE=d.yE||[],yB=d.yB||[];const EI=D0.elevate.map(r=>r[0]),BI=D0.bvg.map(r=>r[0]);const mE=d.elevate.map(r=>yE[EI.indexOf(r[0])]),mB=d.bvg.map(r=>yB[BI.indexOf(r[0])]);
+ tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...yc(mE[i])]),d.sponsors.Elevate?['Total, 10 listed','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',...yt(d.elevate,mE,8)]:null);
+ tbl('tB',['Position','Ownership','Contributed','Distributed','DPI',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',...yt(d.bvg,mB,5)]:null);
  tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
  const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
