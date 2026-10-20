@@ -54,7 +54,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
 <h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
-<h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above 5%/yr on invested capital, 2020–2026 YTD (thru 10/19/26), positive excess only, partial first year pro-rated from investment date. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). 2022 QP IRA undated assignment adjustment dated to its contribution date.</div><div class="scroll" id="tCR"></div>
+<h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above a full 5%/yr of invested capital, counted from Jan 1 of the year after each investment year (2026 pro-rated thru 10/19/26); positive excess only. BVG years held / annual avg / shortfall use the same start dates. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). <span id="crPre"></span></div><div class="scroll" id="tCR"></div>
 <section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
 <div class="chartbox"><div id="annLg" class="annlg"></div><div id="annCh" style="position:relative"></div></div>
 <div class="scroll" style="margin-top:12px" id="tAnn"></div><div class="scroll" style="margin-top:12px" id="tAnnD"></div></section>
@@ -124,7 +124,7 @@ if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;
 <script>
 var ANN_OFF={};
 function capret(d){const c=d.capret;if(!c)return;document.getElementById('crCards').innerHTML=`<div class="card"><div class="l">Total capital returned</div><div class="v">${$(c.total)}</div></div><div class="card"><div class="l">Elevate (refinancing, owner-stated)</div><div class="v">${$(c.elevate)}</div></div><div class="card"><div class="l">BVG (excess over 5%/yr)</div><div class="v">${$(c.bvg)}</div></div>`;
- const Y=[2020,2021,2022,2023,2024,2025,'2026 YTD'];const sm=i=>c.rows.reduce((a,r)=>a+r[i],0);
+ document.getElementById('crPre').textContent=c.pre&&c.pre.length?'Pre-start distributions left out: '+c.pre.map(x=>x[0]+' '+x[1]+' '+$(x[2])).join('; ')+'.':'';const Y=[2020,2021,2022,2023,2024,2025,'2026 YTD'];const sm=i=>c.rows.reduce((a,r)=>a+r[i],0);
  tbl('tCR',['BVG position','Invested','Start date',...Y.map(String),'Total excess'],c.rows.map(r=>[r[0],$(r[1]),r[2],...r.slice(3).map($)]),['TOTAL',$(sm(1)),'',...Y.map((_,i)=>$(sm(3+i))),$(sm(10))])}
 function annual(d){const A=d.annual||[];if(!A.length)return;
  const f=v=>'$'+Math.round(v).toLocaleString(),fk=v=>v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+Math.round(v/1e3)+'K';
