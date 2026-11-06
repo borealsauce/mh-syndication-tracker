@@ -61,7 +61,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 
 <section data-s="E"><h2>Elevate (AppFolio)</h2><div class="scroll" id="tE"></div></section>
 <section data-s="B"><h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div></section>
-<section data-s="B"><h2>B-Share LLCs (BVG)</h2><div class="scroll" id="tBS"></div></section>
+<section data-s="B"><h2>B-Share LLCs (BVG) — sweat equity</h2><div class="muted" style="margin-bottom:8px">No cash invested. Equity is cost-basis (or park equity for Whispering Pines). Excluded from BVG positions, DPI, IRR, contrib/dist, and $ Above Pref.</div><div class="scroll" id="tBS"></div><div class="muted" id="tBSNote" style="font-size:11px;margin-top:6px;max-width:1100px"></div></section>
 <h2>Distributions</h2><div class="scroll" id="tD"></div>
 <h2>Pref vs Principal</h2><div class="muted" style="margin-bottom:8px"><span class="lg" style="background:#e8b923"></span>Pref <span class="lg" style="background:#22c55e"></span>Principal returned <span class="lg" style="background:#38bdf8"></span>Profit </div><div class="cards" id="splCards"></div><div class="scroll" style="margin-top:12px" id="tSpl"></div>
 <section><h2>Refinance Targets</h2><div class="scroll" id="tR"></div></section>
@@ -181,7 +181,7 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  [...d.elevate.map((r,i)=>({r,m:mE[i],sp:'Elevate'})),...d.bvg.map((r,i)=>({r,m:mB[i],sp:'Boa Vida Group'}))].forEach(({r,m,sp})=>{const pr=prinOf(sp,r[0]); if(!m||!r[2]||!pr)return; const p=paybackPace(r[2],pr,m[0]); if(p!=null){pbN+=p*r[2];pbD+=r[2];}});
  tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI','Principal Returned','% Principal Back','Income','$ Above Pref','IRR','Payback Pace'],spRows,['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x',M(r2(totPrin)),fmtPct(totPct),M(r2(totInc)),signedM(totAb),fmtIRR(totIRR),fmtPay(pbD?pbN/pbD:null)]);
  const note=document.getElementById('tSpNote');
- if(note) note.textContent=(d.aboveNote||'')+' IRR is money-weighted (XIRR) from dated contributions (−) and distributions (+); terminal value on '+(d.asof||'today')+' = unreturned principal at cost (not a market mark). Payback Pace = years to return 100% of contributed capital at the observed principal-return pace. Carrie Lynn excluded on Syndications only.';
+ if(note) note.textContent=(d.aboveNote||'')+' IRR is money-weighted (XIRR) from dated contributions (−) and distributions (+); terminal value on '+(d.asof||'today')+' = unreturned principal at cost (not a market mark). Payback Pace = years to return 100% of contributed capital at the observed principal-return pace. Carrie Lynn excluded on Syndications only. Sweat-equity B-shares excluded from BVG positions, contrib/dist, DPI, IRR, $ Above Pref, and Payback Pace.';
 
  // Headline cards: IRR / % principal back / net above pref
  (function(){
@@ -189,7 +189,7 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
    const abTxt=totAb==null?'—':$(r2(totAb));
    host.insertAdjacentHTML('beforeend', `<div class="card"><div class="l">Portfolio IRR (XIRR)</div><div class="v">${fmtIRR(totIRR)}</div><div class="muted">asof ${d.asof||''}</div></div>
 <div class="card"><div class="l">% Principal Back</div><div class="v">${fmtPct(totPct)}</div><div class="muted">${$(r2(totPrin))} returned</div></div>
-<div class="card"><div class="l">Net $ Above Pref</div><div class="v ${sg(totAb)}">${abTxt}</div><div class="muted">income − pref owed (signed)</div></div>`);
+<div class="card"><div class="l">Net $ Above Pref</div><div class="v ${sg(totAb)}">${abTxt}</div><div class="muted">income − pref owed (signed)</div></div><div class="card"><div class="l">B-Share Equity (cost basis)</div><div class="v">${$(d.bshare_equity_total||0)}</div><div class="muted">sweat equity · ${$(d.bshare_dist_total||0)} distributed · not in BVG cash DPI</div></div>`);
  })();
 
  const dealCols=(r,m,sp,ab)=>{
@@ -204,7 +204,16 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  };
  tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status','Principal Returned','% Principal Back','$ Above Pref','IRR','Payback Pace','Ann. Return',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...dealCols(r,mE[i],'Elevate',aboveE[i]),...yc(mE[i])]),d.sponsors.Elevate?['Total','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',M(d.sponsors.Elevate.principal||0),fmtPct(d.sponsors.Elevate.contrib?d.sponsors.Elevate.principal/d.sponsors.Elevate.contrib:null),hasSigned(aboveE)?signedM(sumSigned(aboveE)):'—',fmtIRR(sponsorIRR(d,'Elevate',Math.max(0,d.sponsors.Elevate.contrib-(d.sponsors.Elevate.principal||0)))),'—','',...yt(d.elevate,mE,8)]:null);
  tbl('tB',['Position','Ownership','Contributed','Distributed','DPI','Principal Returned','% Principal Back','$ Above Pref','IRR','Payback Pace','Ann. Return',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...dealCols(r,mB[i],'BVG',aboveB[i]),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',M((d.sponsors['Boa Vida Group']||{}).principal||0),fmtPct((()=>{const s=d.sponsors['Boa Vida Group'];return s&&s.contrib?s.principal/s.contrib:null})()),hasSigned(aboveB)?signedM(sumSigned(aboveB)):'—',fmtIRR(sponsorIRR(d,'Boa Vida Group',Math.max(0,((d.sponsors['Boa Vida Group']||{}).contrib||0)-((d.sponsors['Boa Vida Group']||{}).principal||0)))),'—','',...yt(d.bvg,mB,5)]:null);
- tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
+ const pctLab=v=>v==null||v===''?'—':((v*100).toFixed(2).replace(/\.?0+$/,'')+'%');
+ const bsEqTot=d.bshare_equity_total!=null?d.bshare_equity_total:d.bshares.reduce((a,r)=>a+(r[8]||0),0);
+ const bsDistTot=d.bshare_dist_total!=null?d.bshare_dist_total:d.bshares.reduce((a,r)=>a+(r[3]||0),0);
+ tbl('tBS',['LLC','Class B %','Overall %','Purchase Price','Spaces','B-Share Equity (cost basis)','Distributed'],d.bshares.map(r=>{
+   const eq=r[8], basis=r[9], eqCell=eq==null?'—':(basis==='park_equity'?{v:$(eq)+' *',c:'pos'}:M(eq));
+   return [r[0], pctLab(r[4]), pctLab(r[5]), r[6]==null?'—':$(r[6]), r[7]==null||r[7]===''?'—':r[7], eqCell, M(r[3]||0)];
+ }),['TOTAL','','','','',M(bsEqTot),M(bsDistTot)]);
+ const bsNote=document.getElementById('tBSNote');
+ if(bsNote) bsNote.textContent=(d.bshare_equity_note||'B-Share Equity (cost basis) = gross purchase price × overall ownership %, not net of debt.')+' * Whispering Pines uses park equity $6M × 2.54% overall (Juniper PP $7.5M / 363 spaces noted).';
+
  const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
  if(d.refi&&d.refi.length)tbl('tR',d.refi[0],d.refi.slice(1).map(r=>r.map(c=>typeof c=='number'?(Math.abs(c)>=1000?M(c):c):c)));;
