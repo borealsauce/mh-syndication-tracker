@@ -52,7 +52,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 @media(prefers-reduced-motion:reduce){.fx-in{animation:none;opacity:1}.shim{animation:none}.bar i,.ring .fg{transition:none}.card:hover{transform:none}}</style><style>.lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}.stk{display:flex;height:8px;border-radius:9px;overflow:hidden;background:#1c1c1c;min-width:140px;margin-top:3px}.stk i{display:block;height:100%;width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}@media(prefers-reduced-motion:reduce){.stk i{transition:none}}</style></head><body>
 <div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
-<div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
+<div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="Synd">Syndications only</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
 <h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
 <div id="crSec" style="display:none"><h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above a full 5%/yr of invested capital, counted from Jan 1 of the year after each investment year (2026 pro-rated thru 10/19/26); positive excess only. BVG years held / annual avg / shortfall use the same start dates. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). <span id="crPre"></span></div><div class="scroll" id="tCR"></div></div>
 <section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
@@ -79,17 +79,30 @@ const pc=v=>v==null?'':(typeof v=='number'?v+'%':v);
 const dp=(d,c)=>d==null||!c?'':(d/c).toFixed(2)+'x';
 function tbl(id,h,rows,foot){document.getElementById(id).innerHTML='<table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>').join('')+(foot?'<tr class="ft">'+foot.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>':'')+'</table>';}
 const M=v=>({v:$(v),c:sg(v)});
+function r2(x){return Math.round(x*100)/100}
 function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
  let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
  for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
  document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
- tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI'],Object.entries(d.sponsors).map(([k,s])=>[k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x']),['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x']);
+ const prefRate=(sp,name)=>{if(sp==='Elevate')return /^Bellevue/i.test(name||'')?0.06:0.08;if(sp==='BVG'||sp==='Boa Vida Group'){if(/Lehigh|B-share/i.test(name||''))return null;return 0.05;}return null;};
+ const annPct=(inv,dist,yrs)=>inv&&yrs?((dist||0)/inv)/yrs*100:null;
+ const abovePf=(inv,dist,yrs,rate)=>{if(rate==null||!inv||yrs==null)return null;return Math.max(0,(dist||0)-rate*inv*yrs);};
+ const fmtAnn=v=>v==null?'—':v.toFixed(2)+'%';
+ const fmtAb=v=>v==null?'—':M(r2(v));
+ const aggSp=(rows,ms,spLabel)=>{let inv=0,dist=0,wY=0,ab=0,has=false;rows.forEach((r,i)=>{const m=ms[i];if(!m||!r[2])return;const yrs=m[0],di=r[3]||0,iv=r[2];inv+=iv;dist+=di;wY+=iv*yrs;has=true;const rate=prefRate(spLabel,r[0]);const a=abovePf(iv,di,yrs,rate);if(a!=null)ab+=a;});const yrs=inv?wY/inv:null;return {ann:has&&yrs?annPct(inv,dist,yrs):null,above:has?ab:null,yrs};};
  const YH=['Years held','Annual Avg','Avg Yield %','Pref %','Annual Shortfall','Total Shortfall'];
  const yc=m=>m?[m[0].toFixed(2),$(m[1]),m[2]==null?'—':m[2].toFixed(2)+'%',m[3]+'%',m[4]==null?'—':(m[4]>0?{v:$(m[4]),c:'neg'}:'$0.00'),m[5]==null?'—':(m[5]>0?{v:$(m[5]),c:'neg'}:'$0.00')]:['—','—','—','—','—','—'];
  const yt=(rows,ms,pr)=>{let a=0,iv=0,sa=0,st=0;ms.forEach((m,i)=>{if(!m)return;a+=m[1];if(m[2]!=null)iv+=rows[i][2]||0;sa+=m[4]||0;st+=m[5]||0});return['',$(a),iv?(a/iv*100).toFixed(2)+'%':'—',pr+'%',sa?{v:$(sa),c:'neg'}:'$0.00',st?{v:$(st),c:'neg'}:'$0.00']};
  const yE=d.yE||[],yB=d.yB||[];const EI=D0.elevate.map(r=>r[0]),BI=D0.bvg.map(r=>r[0]);const mE=d.elevate.map(r=>yE[EI.indexOf(r[0])]),mB=d.bvg.map(r=>yB[BI.indexOf(r[0])]);
- tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...yc(mE[i])]),d.sponsors.Elevate?['Total, 11 listed','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',...yt(d.elevate,mE,8)]:null);
- tbl('tB',['Position','Ownership','Contributed','Distributed','DPI',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',...yt(d.bvg,mB,5)]:null);
+ const aE=aggSp(d.elevate,mE,'Elevate'),aB=aggSp(d.bvg,mB,'BVG');
+ const spAnn={Elevate:aE,'Boa Vida Group':aB};
+ const spRows=Object.entries(d.sponsors).map(([k,s])=>{const a=spAnn[k]||{};return [k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x',fmtAnn(a.ann),a.above==null?'—':M(r2(a.above))];});
+ const totAb=(aE.above||0)+(aB.above||0);const totAnn=(()=>{const rows=[...d.elevate.map((r,i)=>({r,m:mE[i]})),...d.bvg.map((r,i)=>({r,m:mB[i]}))];let inv=0,dist=0,wY=0;rows.forEach(({r,m})=>{if(!m||!r[2])return;inv+=r[2];dist+=r[3]||0;wY+=r[2]*m[0];});return inv&&wY?annPct(inv,dist,wY/inv):null;})();
+ tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI','Ann. Return','$ Above Pref'],spRows,['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x',fmtAnn(totAnn),M(r2(totAb))]);
+ const dealAnnAb=(r,m,sp)=>{if(!m||!r[2])return ['—','—'];const yrs=m[0],inv=r[2],di=r[3]||0;const rate=prefRate(sp,r[0]);return [fmtAnn(annPct(inv,di,yrs)),fmtAb(abovePf(inv,di,yrs,rate))];};
+ const sumAb=(rows,ms,sp)=>{let a=0,any=false;rows.forEach((r,i)=>{const v=abovePf(r[2],r[3]||0,ms[i]&&ms[i][0],prefRate(sp,r[0]));if(v!=null){a+=v;any=true;}});return any?M(r2(a)):'—';};
+ tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status','Ann. Return','$ Above Pref',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...dealAnnAb(r,mE[i],'Elevate'),...yc(mE[i])]),d.sponsors.Elevate?['Total','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',fmtAnn(aE.ann),sumAb(d.elevate,mE,'Elevate'),...yt(d.elevate,mE,8)]:null);
+ tbl('tB',['Position','Ownership','Contributed','Distributed','DPI','Ann. Return','$ Above Pref',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...dealAnnAb(r,mB[i],'BVG'),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',fmtAnn(aB.ann),sumAb(d.bvg,mB,'BVG'),...yt(d.bvg,mB,5)]:null);
  tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
  const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
@@ -113,12 +126,32 @@ function fx(d){
  document.querySelectorAll('#app td').forEach(e=>{if(e.firstChild&&e.firstChild.nodeType==3&&e.children.length){const n=e.firstChild;const sp=document.createElement('span');sp.textContent=n.textContent;e.replaceChild(sp,n);countUp(sp)}});}
 
 let D0;const SPN={E:'Elevate',B:'Boa Vida Group'};
-function view(t){const d=JSON.parse(JSON.stringify(D0));if(t!=='All'){const k=SPN[t];d.sponsors={[k]:d.sponsors[k]};const rb=r=>/\(BVG\)/.test(r[0]);if(t==='E'){d.bvg=[];d.bshares=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(r=>!rb(r))]}else{d.elevate=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(rb)]}d.split=d.split.filter(r=>r[0]===k);const s=d.sponsors[k];d.totals={contrib:s.contrib,dist:s.dist,dpi:s.dpi}}
- document.querySelectorAll('#tabs .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('section[data-s]').forEach(x=>x.style.display=(t==='All'||x.dataset.s===t)?'':'none');
+const isCarrie=n=>/Carrie Lynn|SBI TIC MT LLC/i.test(n||'');
+function r2(x){return Math.round(x*100)/100}
+function stripCarrie(d){
+  // Keep yB aligned with D0.bvg; render() looks up by D0 name index.
+  d.bvg=d.bvg.filter(r=>!isCarrie(r[0]));
+  d.split=(d.split||[]).filter(r=>!isCarrie(r[1]));
+  d.annual=(d.annual||[]).filter(r=>r[1]!=='SBI TIC MT'&&!isCarrie(r[1]));
+  if(d.capret&&d.capret.rows){d.capret.rows=d.capret.rows.filter(r=>!/SBI TIC MT|Carrie Lynn/i.test(r[0]||''));const b=d.capret.rows.reduce((a,r)=>a+(r[r.length-1]||0),0);d.capret.bvg=r2(b);d.capret.total=r2((d.capret.elevate||0)+b);}
+  const s=d.sponsors['Boa Vida Group'];
+  if(s){const rr=d.split.filter(x=>x[0]==='Boa Vida Group');
+    s.contrib=r2(rr.reduce((a,x)=>a+(x[2]||0),0));s.dist=r2(rr.reduce((a,x)=>a+(x[3]||0),0));
+    s.pref=r2(rr.reduce((a,x)=>a+(x[4]||0),0));s.principal=r2(rr.reduce((a,x)=>a+(x[5]||0),0));
+    s.profit=r2(rr.reduce((a,x)=>a+(x[6]||0),0));s.outstanding=r2(rr.reduce((a,x)=>a+(x[7]||0),0));
+    s.dpi=s.contrib?r2(s.dist/s.contrib*10000)/10000:0;s.pos=Math.max(0,(s.pos||0)-1);}
+  const tc=Object.values(d.sponsors).reduce((a,s)=>a+(s.contrib||0),0),td=Object.values(d.sponsors).reduce((a,s)=>a+(s.dist||0),0);
+  d.totals={contrib:r2(tc),dist:r2(td),dpi:tc?r2(td/tc*10000)/10000:0};
+  return d;
+}
+function view(t){let d=JSON.parse(JSON.stringify(D0));
+ if(t==='Synd'){d=stripCarrie(d);}
+ else if(t!=='All'){const k=SPN[t];d.sponsors={[k]:d.sponsors[k]};const rb=r=>/\(BVG\)/.test(r[0]);if(t==='E'){d.bvg=[];d.bshares=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(r=>!rb(r))]}else{d.elevate=[];d.refi=[d.refi[0],...d.refi.slice(1).filter(rb)]}d.split=d.split.filter(r=>r[0]===k);const s=d.sponsors[k];d.totals={contrib:s.contrib,dist:s.dist,dpi:s.dpi}}
+ document.querySelectorAll('#tabs .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('section[data-s]').forEach(x=>x.style.display=(t==='All'||t==='Synd'||x.dataset.s===t)?'':'none');
  document.querySelectorAll('.fx-in').forEach(e=>{e.classList.remove('fx-in');void e.offsetWidth});
  localStorage.mhtab=t;render(d);fx(d);}
 document.addEventListener('click',e=>{const b=e.target.closest('#tabs .pill');if(b)view(b.dataset.t)});
-async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';D0=d;view(['All','E','B'].includes(localStorage.mhtab)?localStorage.mhtab:'All');}catch(x){document.getElementById('err').textContent='Wrong password';}}
+async function go(e){e.preventDefault();try{const d=await decrypt(document.getElementById('pw').value);sessionStorage.mhpw=document.getElementById('pw').value;document.getElementById('gate').remove();document.getElementById('app').style.display='';D0=d;view(['All','Synd','E','B'].includes(localStorage.mhtab)?localStorage.mhtab:'All');}catch(x){document.getElementById('err').textContent='Wrong password';}}
 if(sessionStorage.mhpw){document.getElementById('pw').value=sessionStorage.mhpw;go(new Event('submit'));}
 </script><style>.annlg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:8px;font-size:12px}.annlg span{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;color:#d4d4d4}.annlg span.off{opacity:.35;text-decoration:line-through}.annlg i{width:11px;height:11px;border-radius:3px;display:inline-block}.annlg b{font:600 11px Inter;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-right:2px}#annTip{position:absolute;pointer-events:none;background:#0c0c0c;border:1px solid var(--gold);border-radius:8px;padding:6px 9px;font-size:12px;color:#f5f5f5;white-space:nowrap;display:none;z-index:5}#annCh svg{width:100%;height:auto;display:block}#annCh .seg{cursor:pointer}#annCh .seg:hover{filter:brightness(1.25)}</style>
 <script>
