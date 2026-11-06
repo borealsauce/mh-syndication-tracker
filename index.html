@@ -61,7 +61,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 
 <section data-s="E"><h2>Elevate (AppFolio)</h2><div class="scroll" id="tE"></div></section>
 <section data-s="B"><h2>Boa Vida Group (Juniper Square)</h2><div class="scroll" id="tB"></div></section>
-<section data-s="B"><h2>B-Share LLCs (BVG) — sweat equity</h2><div class="muted" style="margin-bottom:8px">No cash invested. Equity is cost-basis (or park equity for Whispering Pines). Excluded from BVG positions, DPI, IRR, contrib/dist, and $ Above Pref.</div><div class="scroll" id="tBS"></div><div class="muted" id="tBSNote" style="font-size:11px;margin-top:6px;max-width:1100px"></div></section>
+<section data-s="B"><h2>B-Share LLCs (BVG) — sweat equity</h2><div class="muted" style="margin-bottom:8px">No cash invested. Equity from Numbers Value (Class B % × raise purchase price; ~$1.19M total). Excluded from BVG positions, DPI, IRR, contrib/dist, and $ Above Pref.</div><div class="scroll" id="tBS"></div><div class="muted" id="tBSNote" style="font-size:11px;margin-top:6px;max-width:1100px"></div></section>
 <h2>Distributions</h2><div class="scroll" id="tD"></div>
 <h2>Pref vs Principal</h2><div class="muted" style="margin-bottom:8px"><span class="lg" style="background:#e8b923"></span>Pref <span class="lg" style="background:#22c55e"></span>Principal returned <span class="lg" style="background:#38bdf8"></span>Profit </div><div class="cards" id="splCards"></div><div class="scroll" style="margin-top:12px" id="tSpl"></div>
 <section><h2>Refinance Targets</h2><div class="scroll" id="tR"></div></section>
@@ -189,7 +189,7 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
    const abTxt=totAb==null?'—':$(r2(totAb));
    host.insertAdjacentHTML('beforeend', `<div class="card"><div class="l">Portfolio IRR (XIRR)</div><div class="v">${fmtIRR(totIRR)}</div><div class="muted">asof ${d.asof||''}</div></div>
 <div class="card"><div class="l">% Principal Back</div><div class="v">${fmtPct(totPct)}</div><div class="muted">${$(r2(totPrin))} returned</div></div>
-<div class="card"><div class="l">Net $ Above Pref</div><div class="v ${sg(totAb)}">${abTxt}</div><div class="muted">income − pref owed (signed)</div></div><div class="card"><div class="l">B-Share Equity (cost basis)</div><div class="v">${$(d.bshare_equity_total||0)}</div><div class="muted">sweat equity · ${$(d.bshare_dist_total||0)} distributed · not in BVG cash DPI</div></div>`);
+<div class="card"><div class="l">Net $ Above Pref</div><div class="v ${sg(totAb)}">${abTxt}</div><div class="muted">income − pref owed (signed)</div></div><div class="card"><div class="l">B-Share Equity</div><div class="v">${$(d.bshare_equity_total||0)}</div><div class="muted">sweat equity · ${$(d.bshare_dist_total||0)} distributed · not in BVG cash DPI</div></div>`);
  })();
 
  const dealCols=(r,m,sp,ab)=>{
@@ -207,12 +207,12 @@ function render(d){document.getElementById('gen').textContent='Updated '+d.gener
  const pctLab=v=>v==null||v===''?'—':((v*100).toFixed(2).replace(/\.?0+$/,'')+'%');
  const bsEqTot=d.bshare_equity_total!=null?d.bshare_equity_total:d.bshares.reduce((a,r)=>a+(r[8]||0),0);
  const bsDistTot=d.bshare_dist_total!=null?d.bshare_dist_total:d.bshares.reduce((a,r)=>a+(r[3]||0),0);
- tbl('tBS',['LLC','Class B %','Overall %','Purchase Price','Spaces','B-Share Equity (cost basis)','Distributed'],d.bshares.map(r=>{
+ tbl('tBS',['LLC','Class B %','Overall %','Purchase Price','Spaces','B-Share Equity','Distributed'],d.bshares.map(r=>{
    const eq=r[8], basis=r[9], eqCell=eq==null?'—':(basis==='park_equity'?{v:$(eq)+' *',c:'pos'}:M(eq));
    return [r[0], pctLab(r[4]), pctLab(r[5]), r[6]==null?'—':$(r[6]), r[7]==null||r[7]===''?'—':r[7], eqCell, M(r[3]||0)];
  }),['TOTAL','','','','',M(bsEqTot),M(bsDistTot)]);
  const bsNote=document.getElementById('tBSNote');
- if(bsNote) bsNote.textContent=(d.bshare_equity_note||'B-Share Equity (cost basis) = gross purchase price × overall ownership %, not net of debt.')+' * Whispering Pines uses park equity $6M × 2.54% overall (Juniper PP $7.5M / 363 spaces noted).';
+ if(bsNote) bsNote.textContent=(d.bshare_equity_note||'B-Share Equity = Class B % × Park Purchase Price from Boa Vida B share Raise Equity $1.19M Numbers (Value column).');
 
  const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
