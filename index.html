@@ -53,7 +53,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 <div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="Synd">Syndications only</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
-<h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div>
+<h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div><div class="muted" id="tSpNote" style="font-size:11px;margin-top:6px;max-width:980px"></div>
 <div id="crSec" style="display:none"><h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above a full 5%/yr of invested capital, counted from Jan 1 of the year after each investment year (2026 pro-rated thru 10/19/26); positive excess only. BVG years held / annual avg / shortfall use the same start dates. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). <span id="crPre"></span></div><div class="scroll" id="tCR"></div></div>
 <section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
 <div class="chartbox"><div id="annLg" class="annlg"></div><div id="annCh" style="position:relative"></div></div>
@@ -80,29 +80,130 @@ const dp=(d,c)=>d==null||!c?'':(d/c).toFixed(2)+'x';
 function tbl(id,h,rows,foot){document.getElementById(id).innerHTML='<table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>').join('')+(foot?'<tr class="ft">'+foot.map(c=>typeof c=='object'&&c?`<td class="${c.c||''}">${c.v}</td>`:`<td>${c??''}</td>`).join('')+'</tr>':'')+'</table>';}
 const M=v=>({v:$(v),c:sg(v)});
 function r2(x){return Math.round(x*100)/100}
+function xirr(flows, guess){
+  // flows: [{date:'YYYY-MM-DD', amount:number}, ...] money-weighted IRR (Newton)
+  if(!flows||flows.length<2) return null;
+  const f=flows.map(x=>({t:Date.parse(x.date+'T00:00:00Z'),a:+x.amount})).filter(x=>!isNaN(x.t)&&x.a);
+  if(f.length<2) return null;
+  const t0=Math.min(...f.map(x=>x.t));
+  const year=t=>(t-t0)/(365.25*24*3600*1000);
+  const npv=r=>f.reduce((s,x)=>s+x.a/Math.pow(1+r,year(x.t)),0);
+  const dnpv=r=>f.reduce((s,x)=>{const y=year(x.t);return s+x.a*(-y)/Math.pow(1+r,y+1)},0);
+  let r=guess==null?0.1:guess;
+  for(let i=0;i<100;i++){
+    const y=npv(r), dy=dnpv(r);
+    if(Math.abs(dy)<1e-14) break;
+    const n=r-y/dy;
+    if(!isFinite(n)||n<=-0.9999) {r=r/2; continue;}
+    if(Math.abs(n-r)<1e-9) return n;
+    r=n;
+  }
+  const y=npv(r); return Math.abs(y)<1e-3?r:null;
+}
+function cfsFor(d, sponsor){
+  const tagDrop=d._dropTags||{};
+  return (d.cfs||[]).filter(x=>{
+    if(sponsor&&x[2]!==sponsor) return false;
+    if(x[3]&&tagDrop[x[3]]) return false;
+    return true;
+  }).map(x=>({date:x[0], amount:x[1]}));
+}
+function sponsorIRR(d, sponsor, outstanding){
+  const flows=cfsFor(d, sponsor);
+  const asof=d.asof||new Date().toISOString().slice(0,10);
+  if(outstanding&&outstanding>0) flows.push({date:asof, amount:outstanding});
+  return xirr(flows, 0.08);
+}
+
 function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
  let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
  for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
  document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
  const prefRate=(sp,name)=>{if(sp==='Elevate')return /^Bellevue/i.test(name||'')?0.06:0.08;if(sp==='BVG'||sp==='Boa Vida Group'){if(/Lehigh|B-share/i.test(name||''))return null;return 0.05;}return null;};
  const annPct=(inv,dist,yrs)=>inv&&yrs?((dist||0)/inv)/yrs*100:null;
- const abovePf=(inv,dist,yrs,rate)=>{if(rate==null||!inv||yrs==null)return null;return Math.max(0,(dist||0)-rate*inv*yrs);};
  const fmtAnn=v=>v==null?'—':v.toFixed(2)+'%';
- const fmtAb=v=>v==null?'—':M(r2(v));
- const aggSp=(rows,ms,spLabel)=>{let inv=0,dist=0,wY=0,ab=0,has=false;rows.forEach((r,i)=>{const m=ms[i];if(!m||!r[2])return;const yrs=m[0],di=r[3]||0,iv=r[2];inv+=iv;dist+=di;wY+=iv*yrs;has=true;const rate=prefRate(spLabel,r[0]);const a=abovePf(iv,di,yrs,rate);if(a!=null)ab+=a;});const yrs=inv?wY/inv:null;return {ann:has&&yrs?annPct(inv,dist,yrs):null,above:has?ab:null,yrs};};
+ const fmtIRR=v=>v==null?'—':(v*100).toFixed(2)+'%';
+ const fmtPct=v=>v==null?'—':(v*100).toFixed(1)+'%';
+ const signedM=v=>v==null?'—':M(r2(v)); // green/red via sg()
  const YH=['Years held','Annual Avg','Avg Yield %','Pref %','Annual Shortfall','Total Shortfall'];
  const yc=m=>m?[m[0].toFixed(2),$(m[1]),m[2]==null?'—':m[2].toFixed(2)+'%',m[3]+'%',m[4]==null?'—':(m[4]>0?{v:$(m[4]),c:'neg'}:'$0.00'),m[5]==null?'—':(m[5]>0?{v:$(m[5]),c:'neg'}:'$0.00')]:['—','—','—','—','—','—'];
  const yt=(rows,ms,pr)=>{let a=0,iv=0,sa=0,st=0;ms.forEach((m,i)=>{if(!m)return;a+=m[1];if(m[2]!=null)iv+=rows[i][2]||0;sa+=m[4]||0;st+=m[5]||0});return['',$(a),iv?(a/iv*100).toFixed(2)+'%':'—',pr+'%',sa?{v:$(sa),c:'neg'}:'$0.00',st?{v:$(st),c:'neg'}:'$0.00']};
- const yE=d.yE||[],yB=d.yB||[];const EI=D0.elevate.map(r=>r[0]),BI=D0.bvg.map(r=>r[0]);const mE=d.elevate.map(r=>yE[EI.indexOf(r[0])]),mB=d.bvg.map(r=>yB[BI.indexOf(r[0])]);
- const aE=aggSp(d.elevate,mE,'Elevate'),aB=aggSp(d.bvg,mB,'BVG');
- const spAnn={Elevate:aE,'Boa Vida Group':aB};
- const spRows=Object.entries(d.sponsors).map(([k,s])=>{const a=spAnn[k]||{};return [k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x',fmtAnn(a.ann),a.above==null?'—':M(r2(a.above))];});
- const totAb=(aE.above||0)+(aB.above||0);const totAnn=(()=>{const rows=[...d.elevate.map((r,i)=>({r,m:mE[i]})),...d.bvg.map((r,i)=>({r,m:mB[i]}))];let inv=0,dist=0,wY=0;rows.forEach(({r,m})=>{if(!m||!r[2])return;inv+=r[2];dist+=r[3]||0;wY+=r[2]*m[0];});return inv&&wY?annPct(inv,dist,wY/inv):null;})();
- tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI','Ann. Return','$ Above Pref'],spRows,['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x',fmtAnn(totAnn),M(r2(totAb))]);
- const dealAnnAb=(r,m,sp)=>{if(!m||!r[2])return ['—','—'];const yrs=m[0],inv=r[2],di=r[3]||0;const rate=prefRate(sp,r[0]);return [fmtAnn(annPct(inv,di,yrs)),fmtAb(abovePf(inv,di,yrs,rate))];};
- const sumAb=(rows,ms,sp)=>{let a=0,any=false;rows.forEach((r,i)=>{const v=abovePf(r[2],r[3]||0,ms[i]&&ms[i][0],prefRate(sp,r[0]));if(v!=null){a+=v;any=true;}});return any?M(r2(a)):'—';};
- tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status','Ann. Return','$ Above Pref',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...dealAnnAb(r,mE[i],'Elevate'),...yc(mE[i])]),d.sponsors.Elevate?['Total','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',fmtAnn(aE.ann),sumAb(d.elevate,mE,'Elevate'),...yt(d.elevate,mE,8)]:null);
- tbl('tB',['Position','Ownership','Contributed','Distributed','DPI','Ann. Return','$ Above Pref',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...dealAnnAb(r,mB[i],'BVG'),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',fmtAnn(aB.ann),sumAb(d.bvg,mB,'BVG'),...yt(d.bvg,mB,5)]:null);
+ const yE=d.yE||[],yB=d.yB||[];const EI=D0.elevate.map(r=>r[0]),BI=D0.bvg.map(r=>r[0]);
+ const mE=d.elevate.map(r=>yE[EI.indexOf(r[0])]),mB=d.bvg.map(r=>yB[BI.indexOf(r[0])]);
+ // Signed above-pref from gen.py (outstanding accrual); map by D0 index → current filtered rows
+ const aE0=D0.aboveE||[],aB0=D0.aboveB||[];
+ const aboveE=d.elevate.map(r=>aE0[EI.indexOf(r[0])]);
+ const aboveB=d.bvg.map(r=>aB0[BI.indexOf(r[0])]);
+ const sumSigned=arr=>arr.reduce((a,v)=>a+(v==null?0:v),0);
+ const hasSigned=arr=>arr.some(v=>v!=null);
+ // Split lookup for principal / income
+ const splOf=(sp,name)=>(d.split||[]).find(x=>x[0]===sp&&x[1]===name);
+ const prinOf=(sp,name)=>{const s=splOf(sp,name);return s?s[5]:0};
+ const incOf=(sp,name)=>{const s=splOf(sp,name);return s?(s[4]+s[6]):null};
+ const tagOfElevate=name=>({'Columbus 2':'Columbus 2','Eagle':'Eagle','Farmington / Flamingo':'Farmington','Lake County':'Lake County','Madison':'Madison','Ontario / Idle Wheels':'Ontario','Orchard':'Orchard','Parkview':'Parkview','Pocatello':'Pocatello','Sun Valley (via SBI TIC)':'Sun Valley','Bellevue (Riverside RV TIC)':'Bellevue'})[name];
+ const tagOfBvg=name=>({'MH/RV 2019 Fund':'2019 MH/RV','2020 QP Fund':'2020 QP','2021 QP Fund':'2021 QP','2022 QP Fund (Shepard Banks Investments LLC)':'2022 QP Shepard','2022 QP Fund (IRA · IRAR 3602813)':'2022 QP IRA','2022 QP Fund (IRA)':'2022 QP IRA','SBI TIC MT LLC (Carrie Lynn Estates, Billings MT)':'SBI TIC MT'})[name];
+ const dealIRR=(sp,tag,outstanding)=>{
+   if(!tag) return null;
+   const drop=d._dropTags||{};
+   const flows=(d.cfs||[]).filter(x=>x[2]===(sp==='Elevate'?'Elevate':'Boa Vida Group')&&x[3]===tag&&!drop[x[3]]).map(x=>({date:x[0],amount:x[1]}));
+   const asof=d.asof||new Date().toISOString().slice(0,10);
+   if(outstanding>0) flows.push({date:asof,amount:outstanding});
+   return xirr(flows,0.08);
+ };
+ const paybackPace=(contrib,prin,yrs)=>{ // yrs to full principal return at observed ROC pace
+   if(!contrib||!prin||!yrs||prin<1) return null;
+   const pct=prin/contrib; if(pct<0.005) return null; // ignore float dust / trivial ROC
+   return yrs/pct;
+ };
+ const fmtPay=v=>v==null?'—':v.toFixed(1)+' yr';
+
+ // ----- Sponsor summary table -----
+ const spRows=Object.entries(d.sponsors).map(([k,s])=>{
+   const prin=s.principal||0, inc=(s.pref||0)+(s.profit||0);
+   const pctBack=s.contrib?prin/s.contrib:null;
+   const ab=k==='Elevate'?sumSigned(aboveE):sumSigned(aboveB);
+   const abShow=k==='Elevate'?hasSigned(aboveE):hasSigned(aboveB);
+   const irr=sponsorIRR(d,k,Math.max(0,(s.contrib||0)-prin));
+   // capital-weighted payback from deals with ROC
+   let pbNum=0,pbDen=0;
+   const rows=k==='Elevate'?d.elevate:d.bvg; const ms=k==='Elevate'?mE:mB; const spn=k==='Elevate'?'Elevate':'Boa Vida Group';
+   rows.forEach((r,i)=>{const m=ms[i], pr=prinOf(spn,r[0]); if(!m||!r[2]||!pr)return; const p=paybackPace(r[2],pr,m[0]); if(p!=null){pbNum+=p*r[2];pbDen+=r[2];}});
+   const pb=pbDen?pbNum/pbDen:null;
+   return [k,s.pos,$(s.contrib),M(s.dist),s.dpi.toFixed(2)+'x',M(prin),fmtPct(pctBack),M(r2(inc)),abShow?signedM(ab):'—',fmtIRR(irr),fmtPay(pb)];
+ });
+ const totPrin=Object.values(d.sponsors).reduce((a,s)=>a+(s.principal||0),0);
+ const totInc=Object.values(d.sponsors).reduce((a,s)=>a+(s.pref||0)+(s.profit||0),0);
+ const totAb=sumSigned(aboveE)+sumSigned(aboveB);
+ const totOut=Math.max(0,(t.contrib||0)-totPrin);
+ const totIRR=sponsorIRR(d,null,totOut);
+ const totPct=t.contrib?totPrin/t.contrib:null;
+ let pbN=0,pbD=0;
+ [...d.elevate.map((r,i)=>({r,m:mE[i],sp:'Elevate'})),...d.bvg.map((r,i)=>({r,m:mB[i],sp:'Boa Vida Group'}))].forEach(({r,m,sp})=>{const pr=prinOf(sp,r[0]); if(!m||!r[2]||!pr)return; const p=paybackPace(r[2],pr,m[0]); if(p!=null){pbN+=p*r[2];pbD+=r[2];}});
+ tbl('tSp',['Sponsor','Positions','Contributed','Distributed','DPI','Principal Returned','% Principal Back','Income','$ Above Pref','IRR','Payback Pace'],spRows,['TOTAL','',$(t.contrib),M(t.dist),t.dpi.toFixed(2)+'x',M(r2(totPrin)),fmtPct(totPct),M(r2(totInc)),signedM(totAb),fmtIRR(totIRR),fmtPay(pbD?pbN/pbD:null)]);
+ const note=document.getElementById('tSpNote');
+ if(note) note.textContent=(d.aboveNote||'')+' IRR is money-weighted (XIRR) from dated contributions (−) and distributions (+); terminal value on '+(d.asof||'today')+' = unreturned principal at cost (not a market mark). Payback Pace = years to return 100% of contributed capital at the observed principal-return pace. Carrie Lynn excluded on Syndications only.';
+
+ // Headline cards: IRR / % principal back / net above pref
+ (function(){
+   const host=document.getElementById('cards'); if(!host)return;
+   const abTxt=totAb==null?'—':$(r2(totAb));
+   host.insertAdjacentHTML('beforeend', `<div class="card"><div class="l">Portfolio IRR (XIRR)</div><div class="v">${fmtIRR(totIRR)}</div><div class="muted">asof ${d.asof||''}</div></div>
+<div class="card"><div class="l">% Principal Back</div><div class="v">${fmtPct(totPct)}</div><div class="muted">${$(r2(totPrin))} returned</div></div>
+<div class="card"><div class="l">Net $ Above Pref</div><div class="v ${sg(totAb)}">${abTxt}</div><div class="muted">income − pref owed (signed)</div></div>`);
+ })();
+
+ const dealCols=(r,m,sp,ab)=>{
+   const spn=sp==='Elevate'?'Elevate':'Boa Vida Group';
+   const pr=prinOf(spn,r[0]), inv=r[2]||0, di=r[3]||0;
+   const pct=inv?pr/inv:null; const yrs=m&&m[0];
+   const tag=sp==='Elevate'?tagOfElevate(r[0]):tagOfBvg(r[0]);
+   const irr=dealIRR(sp,tag,Math.max(0,inv-pr));
+   const pb=paybackPace(inv,pr,yrs);
+   const ann=m&&inv?fmtAnn(annPct(inv,di,yrs)):'—';
+   return [M(pr),fmtPct(pct),ab==null?'—':signedM(ab),fmtIRR(irr),fmtPay(pb),ann];
+ };
+ tbl('tE',['Investment','Ownership','Contributed','Distributed','DPI','Status','Principal Returned','% Principal Back','$ Above Pref','IRR','Payback Pace','Ann. Return',...YH],d.elevate.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),r[4],...dealCols(r,mE[i],'Elevate',aboveE[i]),...yc(mE[i])]),d.sponsors.Elevate?['Total','',$(d.sponsors.Elevate.contrib),M(d.sponsors.Elevate.dist),d.sponsors.Elevate.dpi.toFixed(2)+'x','',M(d.sponsors.Elevate.principal||0),fmtPct(d.sponsors.Elevate.contrib?d.sponsors.Elevate.principal/d.sponsors.Elevate.contrib:null),hasSigned(aboveE)?signedM(sumSigned(aboveE)):'—',fmtIRR(sponsorIRR(d,'Elevate',Math.max(0,d.sponsors.Elevate.contrib-(d.sponsors.Elevate.principal||0)))),'—','',...yt(d.elevate,mE,8)]:null);
+ tbl('tB',['Position','Ownership','Contributed','Distributed','DPI','Principal Returned','% Principal Back','$ Above Pref','IRR','Payback Pace','Ann. Return',...YH],d.bvg.map((r,i)=>[r[0],pc(r[1]),$(r[2]),M(r[3]),dp(r[3],r[2]),...dealCols(r,mB[i],'BVG',aboveB[i]),...yc(mB[i])]),d.bvg.length?['Total, BVG','',$(d.bvg.reduce((a,r)=>a+(r[2]||0),0)),M(d.bvg.reduce((a,r)=>a+(r[3]||0),0)),'',M((d.sponsors['Boa Vida Group']||{}).principal||0),fmtPct((()=>{const s=d.sponsors['Boa Vida Group'];return s&&s.contrib?s.principal/s.contrib:null})()),hasSigned(aboveB)?signedM(sumSigned(aboveB)):'—',fmtIRR(sponsorIRR(d,'Boa Vida Group',Math.max(0,((d.sponsors['Boa Vida Group']||{}).contrib||0)-((d.sponsors['Boa Vida Group']||{}).principal||0)))),'—','',...yt(d.bvg,mB,5)]:null);
  tbl('tBS',['LLC','Ownership','Contributed','Distributed'],d.bshares.map(r=>[r[0],r[1],$(r[2]),M(r[3])]),['TOTAL','',$(0),M(d.bshares.reduce((a,r)=>a+r[3],0))]);
  const D=[...d.elevate.filter(r=>r[3]).map(r=>['Elevate',r[0],M(r[3])]),...d.bvg.map(r=>['Boa Vida Group',r[0],M(r[3])]),...d.bshares.filter(r=>r[3]).map(r=>['Boa Vida Group (B-share)',r[0],M(r[3])])];
  tbl('tD',['Sponsor','Investment','Distributed to date'],D);
@@ -130,6 +231,7 @@ const isCarrie=n=>/Carrie Lynn|SBI TIC MT LLC/i.test(n||'');
 function r2(x){return Math.round(x*100)/100}
 function stripCarrie(d){
   // Keep yB aligned with D0.bvg; render() looks up by D0 name index.
+  d._dropTags={'SBI TIC MT':1};
   d.bvg=d.bvg.filter(r=>!isCarrie(r[0]));
   d.split=(d.split||[]).filter(r=>!isCarrie(r[1]));
   d.annual=(d.annual||[]).filter(r=>r[1]!=='SBI TIC MT'&&!isCarrie(r[1]));
