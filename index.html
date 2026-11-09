@@ -53,7 +53,7 @@ tr.ft td,tr:last-child td{font-weight:700}
 <div id="gate"><form onsubmit="go(event)"><h1>MH Syndication Tracker</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="wrap"><h1>MH Syndication Tracker</h1><div class="muted" id="gen"></div></div></div>
 <div class="wrap" id="app" style="display:none"><div class="pills" id="tabs" style="margin-top:16px"><button class="pill" data-t="All">All</button><button class="pill" data-t="Synd">Syndications only</button><button class="pill" data-t="E">Elevate</button><button class="pill" data-t="B">BVG</button></div>
-<h2>Summary</h2><div class="cards" id="cards"></div><div class="scroll" style="margin-top:14px" id="tSp"></div><div class="muted" id="tSpNote" style="font-size:11px;margin-top:6px;max-width:980px"></div>
+<h2>Summary</h2><div class="cards" id="cards"></div><div class="muted" id="incNote" style="font-size:11px;margin-top:6px;max-width:980px"></div><div class="scroll" style="margin-top:14px" id="tSp"></div><div class="muted" id="tSpNote" style="font-size:11px;margin-top:6px;max-width:980px"></div>
 <div id="crSec" style="display:none"><h2 style="margin-top:22px">Capital Returned (Refinancing)</h2><div class="cards" id="crCards"></div><div class="muted" style="font-size:12px;margin:6px 0 10px">Elevate: owner-stated refinance returns. BVG: distributions above a full 5%/yr of invested capital, counted from Jan 1 of the year after each investment year (2026 pro-rated thru 10/19/26); positive excess only. BVG years held / annual avg / shortfall use the same start dates. Excludes $33.5K undated B-share distributions and Lehigh ($29K; no invested amount on record). <span id="crPre"></span></div><div class="scroll" id="tCR"></div></div>
 <section data-s="A"><h2>Annual Income</h2><div class="muted" style="margin-bottom:8px">Pref + profit distributions by year, each deal its own color (Elevate golds, BVG blues). Returned principal excluded. Click a legend item to hide/show a deal. Undated B-share LLC distributions are not in the yearly bars.</div>
 <div class="chartbox"><div id="annLg" class="annlg"></div><div id="annCh" style="position:relative"></div></div>
@@ -115,10 +115,37 @@ function sponsorIRR(d, sponsor, outstanding){
   return xirr(flows, 0.08);
 }
 
+function incomePct(d){
+  const asof=d.asof||new Date().toISOString().slice(0,10);
+  const asofD=new Date(asof+'T12:00:00');
+  const ttmStart=new Date(asofD); ttmStart.setDate(ttmStart.getDate()-365);
+  const iso=x=>{const y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),dd=String(x.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd};
+  const drop=d._dropTags||{};
+  const keepSp=new Set(Object.keys(d.sponsors||{}));
+  const ev=(d.incEvents||[]).filter(x=>{
+    if(x[3]&&drop[x[3]]) return false;
+    if(keepSp.size&&!keepSp.has(x[2])) return false;
+    return true;
+  });
+  const out=Object.values(d.sponsors).reduce((a,s)=>a+(s.outstanding||0),0);
+  const between=(a,b)=>ev.reduce((s,x)=>s+(x[0]>=a&&x[0]<=b?x[1]:0),0);
+  const ttm=between(iso(ttmStart),asof);
+  const y2025=between('2025-01-01','2025-12-31');
+  const y2026=between('2026-01-01',asof);
+  const y0=new Date('2026-01-01T12:00:00');
+  const days=Math.max(1, Math.round((asofD-y0)/86400000)+1);
+  const y2026ann=y2026/days*365.25;
+  const pct=v=>out>0?v/out*100:null;
+  return {ttm:pct(ttm),y2025:pct(y2025),y2026ann:pct(y2026ann),ttmAmt:ttm,out,days};
+}
 function render(d){document.getElementById('gen').textContent='Updated '+d.generated;const t=d.totals;
- let h=`<div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
+ const ip=incomePct(d); const fmtIP=v=>v==null?'—':v.toFixed(2)+'%';
+ let h=`<div class="card"><div class="l">Annual Income %</div><div class="v pos">${fmtIP(ip.ttm)}</div><div class="muted">TTM · 2026 YTD ann. ${fmtIP(ip.y2026ann)} · 2025 ${fmtIP(ip.y2025)}</div></div><div class="card"><div class="l">Total Contributed</div><div class="v">${$(t.contrib)}</div></div><div class="card"><div class="l">Total Distributed</div><div class="v pos">${$(t.dist)}</div></div><div class="card"><div class="l">DPI</div><div class="v">${t.dpi.toFixed(2)}x</div></div>`;
  for(const[k,s]of Object.entries(d.sponsors))h+=`<div class="card"><div class="l">${k}</div><div class="v">${$(s.contrib)}</div><div class="muted"><span class="pos">${$(s.dist)}</span> distributed · ${s.dpi.toFixed(2)}x DPI</div></div>`;
- document.getElementById('cards').innerHTML=h;try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
+ document.getElementById('cards').innerHTML=h;
+ const incEl=document.getElementById('incNote');
+ if(incEl) incEl.textContent=(d.incNote||'Annual Income % = TTM cash income ÷ outstanding invested capital.')+' TTM income '+$(r2(ip.ttmAmt||0))+' on '+$(r2(ip.out||0))+' outstanding.';
+ try{annual(d)}catch(e){console.error(e)}try{capret(d)}catch(e){console.error(e)}
  const prefRate=(sp,name)=>{if(sp==='Elevate')return /^Bellevue/i.test(name||'')?0.06:0.08;if(sp==='BVG'||sp==='Boa Vida Group'){if(/Lehigh|B-share/i.test(name||''))return null;return 0.05;}return null;};
  const annPct=(inv,dist,yrs)=>inv&&yrs?((dist||0)/inv)/yrs*100:null;
  const fmtAnn=v=>v==null?'—':v.toFixed(2)+'%';
@@ -230,7 +257,7 @@ function burst(el){if(RM)return;const r=el.getBoundingClientRect();for(let i=0;i
 function fx(d){
  document.querySelectorAll('#app h2,#app .scroll,#app .card').forEach((e,i)=>{e.classList.add('fx-in');e.style.animationDelay=Math.min(i*45,1400)+'ms'});
  document.querySelectorAll('#cards .v').forEach((e,i)=>{if(i<2)e.classList.add('shim')});
- const sp=Object.values(d.sponsors);document.querySelectorAll('#cards .card').forEach((c,i)=>{if(i<3)return;const s=sp[i-3];if(!s)return;const C=2*Math.PI*22,p=Math.min(1,s.dpi);c.insertAdjacentHTML('afterbegin',`<svg class="ring" viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="22"/><circle class="fg" cx="27" cy="27" r="22" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="27" y="31">${s.dpi.toFixed(2)}x</text></svg>`);const fg=c.querySelector('.fg');requestAnimationFrame(()=>requestAnimationFrame(()=>fg.style.strokeDashoffset=C*(1-p)));});
+ const sp=Object.values(d.sponsors);document.querySelectorAll('#cards .card').forEach((c,i)=>{if(i<4)return;const s=sp[i-4];if(!s)return;const C=2*Math.PI*22,p=Math.min(1,s.dpi);c.insertAdjacentHTML('afterbegin',`<svg class="ring" viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="22"/><circle class="fg" cx="27" cy="27" r="22" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="27" y="31">${s.dpi.toFixed(2)}x</text></svg>`);const fg=c.querySelector('.fg');requestAnimationFrame(()=>requestAnimationFrame(()=>fg.style.strokeDashoffset=C*(1-p)));});
  ['tE','tB'].forEach(id=>{const tb=document.querySelector('#'+id+' table');const hi=[...tb.rows[0].cells].findIndex(c=>c.textContent=='DPI');[...tb.rows].slice(1).forEach(r=>{const c=r.cells[hi],v=parseFloat(c.textContent);if(isNaN(v))return;c.insertAdjacentHTML('beforeend','<div class="bar"><i></i></div>');const b=c.querySelector('i');setTimeout(()=>{b.style.width=Math.min(100,v*100)+'%';if(v>=1)setTimeout(()=>burst(c),1200)},300);});});
  document.querySelectorAll('#app td,#cards .v,#cards .muted span').forEach(e=>{if(e.children.length==0)countUp(e)});
  document.querySelectorAll('#app td').forEach(e=>{if(e.firstChild&&e.firstChild.nodeType==3&&e.children.length){const n=e.firstChild;const sp=document.createElement('span');sp.textContent=n.textContent;e.replaceChild(sp,n);countUp(sp)}});}
